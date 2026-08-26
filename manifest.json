@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "id": "io.github.matheusmedrado.omadock",
+  "name": "OmaDock",
+  "version": "0.1.0",
+  "author": "matheusmedrado",
+  "license": "MIT",
+  "description": "A fast, terminal-inspired application dock for Omarchy Quattro.",
+  "kinds": ["overlay"],
+  "keepLoaded": true,
+  "entryPoints": {
+    "overlay": "Overlay.qml"
+  }
+}

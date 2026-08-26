@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+script_dir=$(CDPATH= cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
+repo_root=$(CDPATH= cd -- "$script_dir/.." && pwd)
+cd "$repo_root"
+
+if ! command -v omarchy >/dev/null 2>&1; then
+    printf 'OmaDock smoke test: omarchy not found; skipped\n'
+    exit 0
+fi
+
+omarchy plugin validate .
+
+if command -v qmllint >/dev/null 2>&1 && [ -n "${OMARCHY_PATH:-}" ]; then
+    qmllint -I "$OMARCHY_PATH/shell" \
+        Overlay.qml components/*.qml services/*.qml tests/*.qml
+else
+    printf 'OmaDock smoke test: qmllint or OMARCHY_PATH not found; skipped QML lint\n'
+fi
+
+printf 'OmaDock smoke test: passed\n'

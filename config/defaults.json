@@ -1,0 +1,34 @@
+{
+  "version": 1,
+  "position": "bottom",
+  "monitorMode": "all",
+  "monitors": [],
+  "appearance": {
+    "density": "compact",
+    "iconSize": 24,
+    "itemSize": 44,
+    "gap": 4,
+    "edgeMargin": 8,
+    "showSlotNumbers": true,
+    "showLabels": "hover",
+    "usePixelGlyphs": true,
+    "backgroundOpacity": 0.94
+  },
+  "behavior": {
+    "hideMode": "smart",
+    "reserveSpace": false,
+    "revealDelayMs": 35,
+    "hideDelayMs": 320,
+    "animationMs": 160,
+    "workspaceSettleMs": 120,
+    "showRunningUnpinned": true,
+    "clickAction": "focus-or-launch",
+    "middleClickAction": "launch-new",
+    "wheelAction": "cycle-windows"
+  },
+  "pinned": [
+    { "desktopId": "com.mitchellh.ghostty" },
+    { "desktopId": "chromium" }
+  ],
+  "aliases": {}
+}

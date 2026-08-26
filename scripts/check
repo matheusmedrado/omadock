@@ -1,0 +1,75 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+script_dir=$(CDPATH= cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
+repo_root=$(CDPATH= cd -- "$script_dir/.." && pwd)
+cd "$repo_root"
+
+fail() {
+    printf 'OmaDock check: %s\n' "$1" >&2
+    exit 1
+}
+
+command -v jq >/dev/null 2>&1 || fail "jq is required"
+
+jq -e . manifest.json >/dev/null || fail "manifest.json is not valid JSON"
+jq -e . config/defaults.json >/dev/null || fail "config/defaults.json is not valid JSON"
+
+jq -e '
+    .schemaVersion == 1
+    and (.id | type == "string" and test("^[A-Za-z0-9][A-Za-z0-9._-]*$"))
+    and (.id | contains("/") | not)
+    and (.id | contains("..") | not)
+    and (.id | startswith("omarchy.") | not)
+    and (.name | type == "string" and length > 0)
+    and (.version | type == "string" and length > 0)
+    and (.kinds | type == "array" and length > 0)
+    and (.entryPoints | type == "object")
+    and ((.kinds | index("overlay")) == null or
+         (.entryPoints.overlay | type == "string" and length > 0))
+' manifest.json >/dev/null || fail "manifest contract is invalid"
+
+overlay_entry=$(jq -er '.entryPoints.overlay' manifest.json) || fail "overlay entry point is missing"
+case "$overlay_entry" in
+    /*|../*|*/../*|..)
+        fail "overlay entry point must be a safe relative path"
+        ;;
+esac
+[ -f "$overlay_entry" ] || fail "overlay entry point does not exist: $overlay_entry"
+
+find . -path './.git' -prune -o -type l -print -quit | grep -q . \
+    && fail "symlinks are not allowed in the plugin tree"
+
+jq -e '
+    .version == 1
+    and .position == "bottom"
+    and (.monitorMode as $mode |
+         (["all", "focused", "named"] | index($mode)) != null)
+    and (.monitors | type == "array")
+    and (.appearance | type == "object")
+    and (.behavior | type == "object")
+    and (.pinned | type == "array")
+    and (.aliases | type == "object")
+' config/defaults.json >/dev/null || fail "default configuration is invalid"
+
+if rg -n --glob '*.qml' --glob '*.js' --glob '*.json' \
+    '(sudo|pkexec|bash[[:space:]]+-c|curl|wget|https?://)' .; then
+    fail "forbidden command or runtime network reference found"
+fi
+
+git diff --check || fail "whitespace errors found"
+
+if command -v qmllint >/dev/null 2>&1; then
+    qml_files=(Overlay.qml components/*.qml services/*.qml tests/*.qml)
+    if [ -n "${OMARCHY_PATH:-}" ]; then
+        qmllint -I "$OMARCHY_PATH/shell" "${qml_files[@]}"
+    else
+        printf 'OmaDock check: OMARCHY_PATH is not set; running qmllint without shell imports\n'
+        qmllint "${qml_files[@]}"
+    fi
+else
+    printf 'OmaDock check: qmllint not found; skipping QML lint\n'
+fi
+
+printf 'OmaDock check: passed\n'
