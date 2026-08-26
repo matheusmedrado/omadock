@@ -112,10 +112,10 @@ Item {
 
     function unpin(desktopId) {
         var next = ConfigModel.clone(settings)
-        var wanted = String(desktopId || "").trim().toLowerCase()
+        var wanted = ConfigModel.normalizedId(desktopId)
         var remaining = []
         for (var index = 0; index < next.pinned.length; index += 1) {
-            if (String(next.pinned[index].desktopId).trim().toLowerCase() !== wanted) {
+            if (ConfigModel.normalizedId(next.pinned[index].desktopId) !== wanted) {
                 remaining.push(next.pinned[index])
             }
         }

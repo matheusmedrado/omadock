@@ -67,6 +67,9 @@ default:
 - **Right click:** open actions such as pin, unpin, or close the active window.
 - **Edge hover:** reveal the dock when Smart Hide has tucked it away.
 
+Activating a window on another workspace lets Hyprland handle the workspace
+change; OmaDock does not move the pointer for you.
+
 The dock suspends itself on fullscreen workspaces by default, because games and
 videos deserve the whole screen—and all the pixels they can get.
 

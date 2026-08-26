@@ -24,6 +24,7 @@ Item {
         id: appService
         configService: configServiceObject
         windowService: windowServiceObject
+        shell: root.shell
     }
 
     Variants {

@@ -1,5 +1,6 @@
 import QtQuick
 import qs.Commons
+import "../models/ActionModel.js" as ActionModel
 import "../models/DockModel.js" as DockModel
 
 Item {
@@ -8,19 +9,37 @@ Item {
     property var itemRecord: ({})
     property var configuration: ({})
     property var appService
+    property var configService
+    property string monitorName: ""
     property var dockWindow
     property bool hovered: false
     property bool pressed: false
+    property bool contextMenuOpen: false
 
     readonly property var metrics: DockModel.surfaceMetrics(configuration)
     readonly property int itemSize: metrics.itemSize
     readonly property int iconSize: metrics.iconSize
+    readonly property bool localActive: hasLocalActiveWindow()
+    readonly property bool hasContextActions: ActionModel.actionsForItem(root.itemRecord).length > 0
     readonly property bool showSlotNumbers: configuration.appearance
         && configuration.appearance.showSlotNumbers !== false
     readonly property string showLabels: configuration.appearance && configuration.appearance.showLabels
         ? configuration.appearance.showLabels : "hover"
     readonly property bool usePixelGlyphs: configuration.appearance
         && configuration.appearance.usePixelGlyphs !== false
+
+    function hasLocalActiveWindow() {
+        var windows = Array.isArray(root.itemRecord.windows) ? root.itemRecord.windows : []
+        for (var index = 0; index < windows.length; index += 1) {
+            var window = windows[index]
+            if (!window || !window.active) continue
+            if (!root.monitorName) return true
+            if (window.monitorName === root.monitorName) return true
+            if (Array.isArray(window.screenNames)
+                    && window.screenNames.indexOf(root.monitorName) >= 0) return true
+        }
+        return false
+    }
 
     width: itemSize
     height: itemSize
@@ -31,7 +50,7 @@ Item {
         radius: Style.cornerRadius > 0 ? Math.min(Style.cornerRadius, 8) : 0
         color: root.pressed ? Color.accent : Color.bar.background
         border.color: root.itemRecord.urgent ? Color.urgent
-            : root.itemRecord.active ? Color.accent : Color.muted
+            : root.localActive ? Color.accent : Color.muted
         border.width: 1
     }
 
@@ -70,7 +89,7 @@ Item {
     }
 
     Rectangle {
-        visible: !!root.itemRecord.active
+        visible: root.localActive
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.bottom: parent.bottom
         anchors.bottomMargin: Style.space(2)
@@ -105,6 +124,7 @@ Item {
             if (!root.appService) return
             if (mouse.button === Qt.MiddleButton) root.appService.launchNew(root.itemRecord)
             else if (mouse.button === Qt.LeftButton) root.appService.focusOrLaunch(root.itemRecord)
+            else if (mouse.button === Qt.RightButton && root.hasContextActions) root.contextMenuOpen = true
         }
         onWheel: function(wheel) {
             if (root.appService && wheel.angleDelta.y !== 0) root.appService.focusNext(root.itemRecord)
@@ -114,12 +134,22 @@ Item {
     DockTooltip {
         targetItem: root
         targetWindow: root.dockWindow
-        visible: root.hovered && root.showLabels !== "never"
+        visible: root.hovered && root.showLabels !== "never" && !root.contextMenuOpen
         label: {
             var count = root.itemRecord.windowCount || 0
             var suffix = count > 0 ? "  " + count + "x" : ""
             return (root.itemRecord.slot > 0 ? ("0" + root.itemRecord.slot).slice(-2) + "  " : "")
                 + (root.itemRecord.shortLabel || "APP") + suffix
         }
+    }
+
+    DockContextMenu {
+        targetItem: root
+        targetWindow: root.dockWindow
+        itemRecord: root.itemRecord
+        appService: root.appService
+        configService: root.configService
+        requestedOpen: root.contextMenuOpen
+        onClosed: root.contextMenuOpen = false
     }
 }

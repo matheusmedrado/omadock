@@ -1,12 +1,14 @@
 import QtQuick
 import Quickshell
 import "../models/AppMatcher.js" as AppMatcher
+import "../models/ActionModel.js" as ActionModel
 
 Item {
     id: root
 
     property var configService
     property var windowService
+    property var shell
     property var items: []
     property var desktopEntries: []
     property var desktopIndex: ({})
@@ -57,6 +59,16 @@ Item {
         return desktopIndex[AppMatcher.normalizeId(desktopId)] || null
     }
 
+    function iconSourceFor(entry) {
+        if (!entry || !entry.icon) return ""
+
+        var appLibrary = root.shell && root.shell.appLibrary
+        if (appLibrary && typeof appLibrary.iconSource === "function") {
+            return appLibrary.iconSource(String(entry.icon))
+        }
+        return Quickshell.iconPath(String(entry.icon), true)
+    }
+
     function appendWindow(groups, record, aliases) {
         var result = AppMatcher.match(
             record.appId,
@@ -87,7 +99,8 @@ Item {
     }
 
     function makeItem(group, desktopId, pinned, slot) {
-        var entry = desktopId ? entryFor(desktopId) : group.entry
+        var resolvedDesktopId = desktopId || (group && group.desktopId ? group.desktopId : "")
+        var entry = resolvedDesktopId ? entryFor(resolvedDesktopId) : group.entry
         var windows = group ? group.windows : []
         var active = false
         var urgent = false
@@ -96,16 +109,16 @@ Item {
             urgent = urgent || !!windows[index].urgent
         }
 
-        var name = entry ? String(entry.name || desktopId) : (group ? group.appId : desktopId)
+        var name = entry ? String(entry.name || resolvedDesktopId) : (group ? group.appId : resolvedDesktopId)
         var icon = entry ? String(entry.icon || "") : ""
         return {
-            key: pinned ? "desktop:" + AppMatcher.normalizeId(desktopId) : group.key,
-            desktopId: desktopId,
-            appId: group ? group.appId : desktopId,
+            key: pinned ? "desktop:" + AppMatcher.normalizeId(resolvedDesktopId) : group.key,
+            desktopId: resolvedDesktopId,
+            appId: group ? group.appId : resolvedDesktopId,
             name: name,
-            shortLabel: labelFor(name, desktopId),
+            shortLabel: labelFor(name, resolvedDesktopId),
             icon: icon,
-            iconSource: icon ? Quickshell.iconPath(icon) : "",
+            iconSource: icon ? iconSourceFor(entry) : "",
             pinned: pinned,
             missing: !entry,
             running: windows.length > 0,
@@ -171,7 +184,21 @@ Item {
 
     function launch(desktopId) {
         var entry = entryFor(desktopId)
-        if (!entry || typeof entry.execute !== "function") {
+        if (!entry) {
+            var missingId = String(desktopId || "")
+            console.warn("OmaDock: no desktop entry for " + (missingId || "the requested application"))
+            launchFailed(missingId)
+            return false
+        }
+
+        var appLibrary = root.shell && root.shell.appLibrary
+        if (appLibrary && typeof appLibrary.launch === "function") {
+            appLibrary.launch(String(entry.id || desktopId), String(entry.name || desktopId))
+            return true
+        }
+
+        if (typeof entry.execute !== "function") {
+            console.warn("OmaDock: desktop entry cannot be launched: " + String(entry.id || desktopId))
             launchFailed(String(desktopId || ""))
             return false
         }
@@ -186,26 +213,31 @@ Item {
     }
 
     function focusOrLaunch(item) {
-        if (!item || item.missing) return false
-        if (item.windowCount === 0) return launch(item.desktopId)
-        if (item.windowCount === 1) return focusWindow(item.windows[0])
-        return focusNext(item)
+        if (!item) return false
+        if (item.windowCount > 0) {
+            if (item.windowCount === 1) return focusWindow(item.windows[0])
+            return focusNext(item)
+        }
+        if (item.missing) {
+            launch(item.desktopId)
+            return false
+        }
+        return launch(item.desktopId)
     }
 
     function focusNext(item) {
         if (!item || item.windowCount === 0) return false
-        var nextIndex = 0
-        for (var index = 0; index < item.windows.length; index += 1) {
-            if (item.windows[index].active) {
-                nextIndex = (index + 1) % item.windows.length
-                break
-            }
-        }
+        var nextIndex = ActionModel.nextWindowIndex(item.windows)
+        if (nextIndex < 0) return false
         return focusWindow(item.windows[nextIndex])
     }
 
     function launchNew(item) {
-        return item && !item.missing ? launch(item.desktopId) : false
+        if (!item || item.missing) {
+            if (item) launch(item.desktopId)
+            return false
+        }
+        return launch(item.desktopId)
     }
 
     function closeActive(item) {

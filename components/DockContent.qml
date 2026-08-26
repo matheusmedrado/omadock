@@ -8,6 +8,8 @@ Item {
     property var items: []
     property var configuration: ({})
     property var appService
+    property var configService
+    property string monitorName: ""
     property var dockWindow
     readonly property var metrics: DockModel.surfaceMetrics(configuration)
     readonly property int itemSize: metrics.itemSize
@@ -48,6 +50,8 @@ Item {
                     itemRecord: modelData
                     configuration: root.configuration
                     appService: root.appService
+                    configService: root.configService
+                    monitorName: root.monitorName
                     dockWindow: root.dockWindow
                 }
             }

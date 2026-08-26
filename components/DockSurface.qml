@@ -11,6 +11,8 @@ PanelWindow {
     property var items: []
     property var configuration: ({})
     property var appService
+    property var configService
+    property string monitorName: ""
     property bool requestedVisible: true
 
     readonly property var metrics: DockModel.surfaceMetrics(configuration)
@@ -51,6 +53,8 @@ PanelWindow {
         items: root.items
         configuration: root.configuration
         appService: root.appService
+        configService: root.configService
+        monitorName: root.monitorName
         dockWindow: root
     }
 }

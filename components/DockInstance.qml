@@ -7,6 +7,7 @@ Item {
     property var screen
     property var configService
     property var appService
+    readonly property string monitorName: monitor ? String(monitor.name || "") : ""
     readonly property var configuration: configService ? configService.settings : ({})
     readonly property var monitor: screen ? Hyprland.monitorFor(screen) : null
     readonly property bool monitorEnabled: isMonitorEnabled()
@@ -31,6 +32,8 @@ Item {
         items: root.appService ? root.appService.items : []
         configuration: root.configuration
         appService: root.appService
+        configService: root.configService
+        monitorName: root.monitorName
         requestedVisible: root.monitorEnabled
     }
 }
