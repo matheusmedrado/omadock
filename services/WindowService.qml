@@ -8,6 +8,7 @@ Item {
     property var records: []
     property int refreshDelayMs: 35
     property int ipcSettleMs: 25
+    signal workspaceTransition()
 
     function modelValues(model) {
         return model && model.values ? model.values : []
@@ -125,6 +126,13 @@ Item {
         return false
     }
 
+    function isWorkspaceEvent(event) {
+        var name = String(event && (event.name || event.event || event.type) || "").toLowerCase()
+        return name.indexOf("workspace") === 0
+            || name.indexOf("moveworkspace") === 0
+            || name.indexOf("focusedmon") === 0
+    }
+
     Timer {
         id: refreshTimer
         interval: root.refreshDelayMs
@@ -158,6 +166,7 @@ Item {
         function onMonitorsChanged() { root.scheduleRefresh() }
         function onActiveToplevelChanged() { root.scheduleRefresh() }
         function onRawEvent(event) {
+            if (root.isWorkspaceEvent(event)) root.workspaceTransition()
             if (root.relevantEvent(event)) root.scheduleRefresh()
         }
     }

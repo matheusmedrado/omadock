@@ -11,6 +11,7 @@ Item {
     property var appService
     property var configService
     property string monitorName: ""
+    property var hideController
     property var dockWindow
     property bool hovered: false
     property bool pressed: false
@@ -151,5 +152,22 @@ Item {
         configService: root.configService
         requestedOpen: root.contextMenuOpen
         onClosed: root.contextMenuOpen = false
+    }
+
+    onContextMenuOpenChanged: {
+        if (root.hideController) {
+            root.hideController.setHold(
+                "menu", String(root.itemRecord.key || root.itemRecord.desktopId || "item"),
+                root.contextMenuOpen
+            )
+        }
+    }
+
+    Component.onDestruction: {
+        if (root.contextMenuOpen && root.hideController) {
+            root.hideController.setHold(
+                "menu", String(root.itemRecord.key || root.itemRecord.desktopId || "item"), false
+            )
+        }
     }
 }

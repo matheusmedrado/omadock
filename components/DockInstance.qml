@@ -1,5 +1,6 @@
 import QtQuick
 import Quickshell.Hyprland
+import "../services"
 
 Item {
     id: root
@@ -7,6 +8,7 @@ Item {
     property var screen
     property var configService
     property var appService
+    property bool forcedReveal: false
     readonly property string monitorName: monitor ? String(monitor.name || "") : ""
     readonly property var configuration: configService ? configService.settings : ({})
     readonly property var monitor: screen ? Hyprland.monitorFor(screen) : null
@@ -26,6 +28,24 @@ Item {
         return true
     }
 
+    HideController {
+        id: hideController
+        configuration: root.configuration
+        monitor: root.monitor
+        windowService: root.appService ? root.appService.windowService : null
+        dockSurface: surface
+        monitorEnabled: root.monitorEnabled
+        forcedReveal: root.forcedReveal
+    }
+
+    EdgeSensor {
+        id: edgeSensor
+        screen: root.screen
+        hideController: hideController
+        requestedVisible: root.monitorEnabled
+        edgeEnabled: hideController.edgeEnabled
+    }
+
     DockSurface {
         id: surface
         screen: root.screen
@@ -34,6 +54,8 @@ Item {
         appService: root.appService
         configService: root.configService
         monitorName: root.monitorName
+        hideController: hideController
+        revealProgress: hideController.revealProgress
         requestedVisible: root.monitorEnabled
     }
 }

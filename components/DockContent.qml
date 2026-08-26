@@ -10,6 +10,7 @@ Item {
     property var appService
     property var configService
     property string monitorName: ""
+    property var hideController
     property var dockWindow
     readonly property var metrics: DockModel.surfaceMetrics(configuration)
     readonly property int itemSize: metrics.itemSize
@@ -36,6 +37,17 @@ Item {
         border.width: 1
     }
 
+    HoverHandler {
+        id: dockHover
+        onHoveredChanged: {
+            if (root.hideController) root.hideController.dockHovered = hovered
+        }
+    }
+
+    Component.onDestruction: {
+        if (root.hideController) root.hideController.dockHovered = false
+    }
+
     Row {
         id: dockRow
         anchors.centerIn: parent
@@ -52,6 +64,7 @@ Item {
                     appService: root.appService
                     configService: root.configService
                     monitorName: root.monitorName
+                    hideController: root.hideController
                     dockWindow: root.dockWindow
                 }
             }
