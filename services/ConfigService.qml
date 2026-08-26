@@ -1,9 +1,9 @@
-import QtQml
+import QtQuick
 import Quickshell
 import Quickshell.Io
 import "../models/ConfigModel.js" as ConfigModel
 
-QtObject {
+Item {
     id: root
 
     property var settings: ConfigModel.defaultConfig()

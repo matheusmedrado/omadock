@@ -60,16 +60,34 @@ fi
 
 git diff --check || fail "whitespace errors found"
 
-if command -v qmllint >/dev/null 2>&1; then
+qmllint_bin=$(command -v qmllint || true)
+if [ -z "$qmllint_bin" ] && [ -x /usr/lib/qt6/bin/qmllint ]; then
+    qmllint_bin=/usr/lib/qt6/bin/qmllint
+fi
+
+if [ -n "$qmllint_bin" ]; then
     qml_files=(Overlay.qml components/*.qml services/*.qml tests/*.qml)
     if [ -n "${OMARCHY_PATH:-}" ]; then
-        qmllint -I "$OMARCHY_PATH/shell" "${qml_files[@]}"
+        "$qmllint_bin" -I "$OMARCHY_PATH/shell" "${qml_files[@]}"
     else
         printf 'OmaDock check: OMARCHY_PATH is not set; running qmllint without shell imports\n'
-        qmllint "${qml_files[@]}"
+        "$qmllint_bin" "${qml_files[@]}"
     fi
 else
     printf 'OmaDock check: qmllint not found; skipping QML lint\n'
+fi
+
+qmltestrunner_bin=$(command -v qmltestrunner || true)
+if [ -z "$qmltestrunner_bin" ] && [ -x /usr/lib/qt6/bin/qmltestrunner ]; then
+    qmltestrunner_bin=/usr/lib/qt6/bin/qmltestrunner
+fi
+
+if [ -n "$qmltestrunner_bin" ]; then
+    env -u QT_QPA_PLATFORMTHEME QT_QPA_PLATFORM=offscreen \
+        "$qmltestrunner_bin" -input tests \
+        || fail "QML tests failed"
+else
+    printf 'OmaDock check: qmltestrunner not found; skipping QML tests\n'
 fi
 
 printf 'OmaDock check: passed\n'

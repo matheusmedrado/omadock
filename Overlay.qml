@@ -1,4 +1,6 @@
 import QtQuick
+import Quickshell
+import "components"
 import "services"
 
 Item {
@@ -22,6 +24,19 @@ Item {
         id: appService
         configService: configServiceObject
         windowService: windowServiceObject
+    }
+
+    Variants {
+        model: Quickshell.screens
+
+        delegate: Component {
+            DockInstance {
+                required property var modelData
+                screen: modelData
+                configService: root.configServiceObject
+                appService: root.appService
+            }
+        }
     }
 
     function open(payload) {

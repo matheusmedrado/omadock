@@ -1,9 +1,8 @@
-import QtQml
-import Quickshell
+import QtQuick
 import Quickshell.Hyprland
 import Quickshell.Wayland
 
-QtObject {
+Item {
     id: root
 
     property var records: []

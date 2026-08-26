@@ -13,8 +13,13 @@ fi
 
 omarchy plugin validate .
 
-if command -v qmllint >/dev/null 2>&1 && [ -n "${OMARCHY_PATH:-}" ]; then
-    qmllint -I "$OMARCHY_PATH/shell" \
+qmllint_bin=$(command -v qmllint || true)
+if [ -z "$qmllint_bin" ] && [ -x /usr/lib/qt6/bin/qmllint ]; then
+    qmllint_bin=/usr/lib/qt6/bin/qmllint
+fi
+
+if [ -n "$qmllint_bin" ] && [ -n "${OMARCHY_PATH:-}" ]; then
+    "$qmllint_bin" -I "$OMARCHY_PATH/shell" \
         Overlay.qml components/*.qml services/*.qml tests/*.qml
 else
     printf 'OmaDock smoke test: qmllint or OMARCHY_PATH not found; skipped QML lint\n'

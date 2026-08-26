@@ -1,8 +1,8 @@
-import QtQml
+import QtQuick
 import Quickshell
 import "../models/AppMatcher.js" as AppMatcher
 
-QtObject {
+Item {
     id: root
 
     property var configService
