@@ -14,6 +14,8 @@ Item {
     property bool forcedReveal: false
     property string forcedMonitorName: ""
     property var dockInstances: []
+    property alias dockConfigService: configServiceObject
+    property alias dockAppService: appService
 
     ConfigService {
         id: configServiceObject
@@ -38,8 +40,8 @@ Item {
                 id: dockInstance
                 required property var modelData
                 screen: modelData
-                configService: root.configServiceObject
-                appService: root.appService
+                configService: root.dockConfigService
+                appService: root.dockAppService
                 forcedReveal: root.forcedReveal
                     && (!root.forcedMonitorName || root.forcedMonitorName === dockInstance.monitorName)
 
