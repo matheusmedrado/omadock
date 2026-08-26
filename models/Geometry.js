@@ -20,6 +20,8 @@ function dockRect(monitor, dockWidth, dockHeight, edgeMargin) {
     for (var index = 0; index < values.length; index += 1) {
         if (typeof values[index] !== "number" || !isFinite(values[index])) return null
     }
+    if (monitor.width <= 0 || monitor.height <= 0
+            || dockWidth < 0 || dockHeight < 0 || edgeMargin < 0) return null
     return {
         x: monitor.x + (monitor.width - dockWidth) / 2,
         y: monitor.y + monitor.height - dockHeight - edgeMargin,
@@ -32,7 +34,9 @@ function sameWorkspace(record, workspace) {
     if (!record || !workspace) return false
     if (record.workspaceId !== null && record.workspaceId !== undefined
             && workspace.id !== null && workspace.id !== undefined) {
-        return Number(record.workspaceId) === Number(workspace.id)
+        var recordId = Number(record.workspaceId)
+        var workspaceId = Number(workspace.id)
+        if (isFinite(recordId) && isFinite(workspaceId)) return recordId === workspaceId
     }
     return String(record.workspaceName || "") !== ""
         && String(workspace.name || "") !== ""
@@ -41,11 +45,13 @@ function sameWorkspace(record, workspace) {
 
 function isOmaDockSurface(record) {
     if (!record) return false
-    var namespace = String(record.layerNamespace || record.namespace || "")
-    return namespace === "omadock-surface"
-        || namespace === "omadock-edge"
-        || namespace === "omadock-menu"
-        || namespace === "omadock-tooltip"
+    var namespaces = [record.layerNamespace, record.namespace]
+    for (var index = 0; index < namespaces.length; index += 1) {
+        var namespace = String(namespaces[index] || "")
+        if (namespace === "omadock-surface" || namespace === "omadock-edge"
+                || namespace === "omadock-menu" || namespace === "omadock-tooltip") return true
+    }
+    return false
 }
 
 function conflicts(record, protectedRect, workspace, monitorName) {

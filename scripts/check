@@ -16,6 +16,24 @@ command -v jq >/dev/null 2>&1 || fail "jq is required"
 jq -e . manifest.json >/dev/null || fail "manifest.json is not valid JSON"
 jq -e . config/defaults.json >/dev/null || fail "config/defaults.json is not valid JSON"
 
+manifest_version=$(jq -er '.version' manifest.json) || fail "manifest version is missing"
+changelog_version=$(sed -n 's/^## \[\([^]]*\)\].*/\1/p' CHANGELOG.md | head -n 1)
+[ -n "$changelog_version" ] || fail "changelog version is missing"
+[ "$manifest_version" = "$changelog_version" ] \
+    || fail "manifest version does not match the latest changelog version"
+
+plugin_id=$(jq -er '.id' manifest.json) || fail "manifest ID is missing"
+rg -q --fixed-strings "$plugin_id" README.md \
+    || fail "README does not use the permanent plugin ID"
+rg -q --fixed-strings "https://github.com/matheusmedrado/omadock.git" README.md \
+    || fail "README does not use the repository URL"
+[ -f LICENSE ] || fail "LICENSE file is missing"
+[ "$(jq -er '.license' manifest.json)" = "MIT" ] \
+    || fail "manifest license must be MIT"
+[ -s preview.png ] || fail "preview.png is missing or empty"
+rg -q --fixed-strings "![OmaDock preview](preview.png)" README.md \
+    || fail "README does not reference preview.png"
+
 jq -e '
     .schemaVersion == 1
     and (.id | type == "string" and test("^[A-Za-z0-9][A-Za-z0-9._-]*$"))
@@ -40,6 +58,13 @@ esac
 
 find . -path './.git' -prune -o -type l -print -quit | grep -q . \
     && fail "symlinks are not allowed in the plugin tree"
+
+while IFS= read -r executable; do
+    case "$executable" in
+        ./scripts/check|./scripts/smoke-test) ;;
+        *) fail "unexpected executable file: $executable" ;;
+    esac
+done < <(find . -path './.git' -prune -o -type f -perm /111 -print)
 
 jq -e '
     .version == 1

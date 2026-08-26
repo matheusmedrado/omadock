@@ -9,6 +9,8 @@ to remember.
 
 > The dock hides so your windows can shine. Mostly.
 
+![OmaDock preview](preview.png)
+
 ## Features
 
 - Smart Hide with edge reveal and Hyprland-aware window detection.

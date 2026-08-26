@@ -19,6 +19,20 @@ TestCase {
         compare(rectangle.height, 68)
     }
 
+    function test_fractionalMonitorGeometryStaysInCompositorCoordinates() {
+        var rectangle = Geometry.dockRect({ x: -1280.5, y: 0.25, width: 1280.5, height: 720.5 },
+                                           301.5, 60.5, 7.5)
+        compare(rectangle.x, -791)
+        compare(rectangle.y, 652.75)
+        compare(rectangle.width, 301.5)
+        compare(rectangle.height, 68)
+    }
+
+    function test_invalidDockDimensionsAreIgnored() {
+        verify(Geometry.dockRect({ x: 0, y: 0, width: 1920, height: 1080 }, -1, 60, 8) === null)
+        verify(Geometry.dockRect({ x: 0, y: 0, width: 0, height: 1080 }, 300, 60, 8) === null)
+    }
+
     function test_conflictFallbacks() {
         var workspace = { id: 2, name: "2" }
         var protectedRect = { x: 0, y: 900, width: 400, height: 100 }
@@ -34,6 +48,11 @@ TestCase {
             workspaceId: 1, monitorName: "DP-1", mapped: true, minimized: false,
             floating: false, geometry: { x: 0, y: 900, width: 400, height: 100 }
         }, protectedRect, workspace, "DP-1"))
+        verify(Geometry.conflicts({
+            workspaceId: "special", workspaceName: "special", monitorName: "DP-1",
+            mapped: true, minimized: false, floating: false,
+            geometry: { x: 0, y: 900, width: 400, height: 100 }
+        }, protectedRect, { id: "special", name: "special" }, "DP-1"))
     }
 
     function test_fullscreenWorkspaceWins() {
