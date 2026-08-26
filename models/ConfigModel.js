@@ -156,6 +156,49 @@ function normalizePinned(raw, fallback, warnings) {
     return result
 }
 
+function insertPinned(pinned, desktopId, index) {
+    var value = String(desktopId || "").trim()
+    var wanted = normalizedId(value)
+    var result = Array.isArray(pinned) ? clone(pinned) : []
+    if (!wanted) return result
+
+    for (var existingIndex = 0; existingIndex < result.length; existingIndex += 1) {
+        if (normalizedId(result[existingIndex] && result[existingIndex].desktopId) === wanted) {
+            return result
+        }
+    }
+
+    var destination = Number(index)
+    if (!isFinite(destination)) destination = result.length
+    destination = Math.max(0, Math.min(result.length, Math.floor(destination)))
+    result.splice(destination, 0, { desktopId: value })
+    return result
+}
+
+function reorderPinned(pinned, fromIndex, toIndex) {
+    if (!Array.isArray(pinned)) return null
+    var result = clone(pinned)
+    var from = Number(fromIndex)
+    var to = Number(toIndex)
+    if (!isFinite(from) || !isFinite(to)
+            || Math.floor(from) !== from || Math.floor(to) !== to
+            || from < 0 || from >= result.length || to < 0 || to > result.length) return null
+
+    var moved = result.splice(from, 1)[0]
+    var destination = Math.min(to, result.length)
+    result.splice(destination, 0, moved)
+    return result
+}
+
+function samePinnedOrder(first, second) {
+    if (!Array.isArray(first) || !Array.isArray(second) || first.length !== second.length) return false
+    for (var index = 0; index < first.length; index += 1) {
+        if (normalizedId(first[index] && first[index].desktopId)
+                !== normalizedId(second[index] && second[index].desktopId)) return false
+    }
+    return true
+}
+
 function normalizeAliases(raw, fallback, warnings) {
     if (!has(raw, "aliases")) return clone(fallback)
     if (!isObject(raw.aliases)) {

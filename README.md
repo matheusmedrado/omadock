@@ -15,6 +15,7 @@ to remember.
 - Independent behavior on each monitor.
 - Pinned applications and running, unpinned applications.
 - Launch, focus, multi-window cycling, and safe context-menu actions.
+- Drag reorder for pinned apps, including pinning eligible running apps.
 - Live Omarchy theme integration.
 - A JSON configuration file that survives updates and removal.
 - No daemon, polling loop, telemetry, network requests, or extra runtime.
@@ -65,6 +66,7 @@ default:
 - **Middle click:** launch a new instance.
 - **Mouse wheel:** cycle existing windows.
 - **Right click:** open actions such as pin, unpin, or close the active window.
+- **Drag:** reorder pinned apps, or drag a running app into the pinned region.
 - **Edge hover:** reveal the dock when Smart Hide has tucked it away.
 
 Activating a window on another workspace lets Hyprland handle the workspace

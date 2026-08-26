@@ -61,4 +61,24 @@ TestCase {
         compare(result.value.pinned[0].desktopId, "Example.App.desktop")
         verify(merged.futureOption.enabled)
     }
+
+    function test_insertPinnedUsesClampedIndexAndRejectsDuplicates() {
+        var pins = [{ desktopId: "one" }, { desktopId: "three" }]
+        var inserted = ConfigModel.insertPinned(pins, "two.desktop", 1)
+        compare(inserted.length, 3)
+        compare(inserted[1].desktopId, "two.desktop")
+
+        var duplicate = ConfigModel.insertPinned(inserted, "TWO", 0)
+        verify(ConfigModel.samePinnedOrder(inserted, duplicate))
+        compare(pins.length, 2)
+    }
+
+    function test_reorderPinnedAllowsEndInsertionWithoutMutatingInput() {
+        var pins = [{ desktopId: "one" }, { desktopId: "two" }, { desktopId: "three" }]
+        var reordered = ConfigModel.reorderPinned(pins, 0, 3)
+        compare(reordered[0].desktopId, "two")
+        compare(reordered[2].desktopId, "one")
+        compare(pins[0].desktopId, "one")
+        verify(ConfigModel.reorderPinned(pins, 3, 0) === null)
+    }
 }

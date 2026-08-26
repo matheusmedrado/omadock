@@ -12,10 +12,21 @@ Item {
     property var configService
     property string monitorName: ""
     property var hideController
+    property var dockContent
     property var dockWindow
+    property int itemIndex: -1
     property bool hovered: false
     property bool pressed: false
     property bool contextMenuOpen: false
+    property bool dragSource: false
+    property bool dragStarted: false
+    property bool suppressClick: false
+    property real pressX: 0
+    property real pressY: 0
+    property int pressButton: Qt.NoButton
+    readonly property int dragThreshold: 8
+
+    opacity: root.dragSource ? 0.45 : 1
 
     readonly property var metrics: DockModel.surfaceMetrics(configuration)
     readonly property int itemSize: metrics.itemSize
@@ -118,10 +129,54 @@ Item {
 
         onEntered: root.hovered = true
         onExited: root.hovered = false
-        onPressed: root.pressed = true
-        onReleased: root.pressed = false
-        onCanceled: root.pressed = false
+        onPressed: function(mouse) {
+            root.pressed = true
+            root.pressX = mouse.x
+            root.pressY = mouse.y
+            root.pressButton = mouse.button
+            root.dragStarted = false
+            root.suppressClick = false
+        }
+        onPositionChanged: function(mouse) {
+            if (!pressed || root.pressButton !== Qt.LeftButton || !root.dockContent) return
+
+            var point = root.mapToItem(root.dockContent, mouse.x, mouse.y)
+            if (root.dragStarted) {
+                root.dockContent.updateDrag(point.x)
+                return
+            }
+
+            var dx = mouse.x - root.pressX
+            var dy = mouse.y - root.pressY
+            var distance = Math.sqrt(dx * dx + dy * dy)
+            if (distance < root.dragThreshold) return
+            if (root.dockContent.beginDrag(root.itemIndex, root.itemRecord)) {
+                root.dragStarted = true
+                root.suppressClick = true
+                root.dockContent.updateDrag(point.x)
+            }
+        }
+        onReleased: function(mouse) {
+            var wasDragging = root.dragStarted
+            if (wasDragging && root.dockContent) {
+                var point = root.mapToItem(root.dockContent, mouse.x, mouse.y)
+                root.dockContent.finishDrag(point.x)
+            }
+            root.dragStarted = false
+            root.pressButton = Qt.NoButton
+            root.pressed = false
+        }
+        onCanceled: {
+            if (root.dragStarted && root.dockContent) root.dockContent.cancelDrag()
+            root.dragStarted = false
+            root.pressButton = Qt.NoButton
+            root.pressed = false
+        }
         onClicked: function(mouse) {
+            if (root.suppressClick) {
+                root.suppressClick = false
+                return
+            }
             if (!root.appService) return
             if (mouse.button === Qt.MiddleButton) root.appService.launchNew(root.itemRecord)
             else if (mouse.button === Qt.LeftButton) root.appService.focusOrLaunch(root.itemRecord)
@@ -164,6 +219,7 @@ Item {
     }
 
     Component.onDestruction: {
+        if (root.dockContent) root.dockContent.cancelDragIf(root.itemRecord)
         if (root.contextMenuOpen && root.hideController) {
             root.hideController.setHold(
                 "menu", String(root.itemRecord.key || root.itemRecord.desktopId || "item"), false

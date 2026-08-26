@@ -79,7 +79,7 @@ Item {
     }
 
     function writePending() {
-        if (pendingText === null) return
+        if (pendingText === null || writing) return
         writing = true
         fileView.setText(pendingText)
         pendingText = null
@@ -105,8 +105,18 @@ Item {
     }
 
     function pin(desktopId) {
+        return pinAt(desktopId, Array.isArray(settings.pinned) ? settings.pinned.length : 0)
+    }
+
+    function pinAt(desktopId, index) {
+        var value = String(desktopId || "").trim()
+        if (!value || !ConfigModel.normalizedId(value)) return false
+
         var next = ConfigModel.clone(settings)
-        next.pinned.push({ desktopId: desktopId })
+        var pins = Array.isArray(next.pinned) ? next.pinned : []
+        var updated = ConfigModel.insertPinned(pins, value, index)
+        if (ConfigModel.samePinnedOrder(pins, updated)) return true
+        next.pinned = updated
         return save(next)
     }
 
@@ -125,11 +135,11 @@ Item {
 
     function reorderPinned(fromIndex, toIndex) {
         var next = ConfigModel.clone(settings)
-        if (fromIndex < 0 || fromIndex >= next.pinned.length
-                || toIndex < 0 || toIndex >= next.pinned.length) return false
-
-        var moved = next.pinned.splice(fromIndex, 1)[0]
-        next.pinned.splice(toIndex, 0, moved)
+        var current = Array.isArray(next.pinned) ? next.pinned : []
+        var reordered = ConfigModel.reorderPinned(current, fromIndex, toIndex)
+        if (reordered === null) return false
+        if (ConfigModel.samePinnedOrder(current, reordered)) return true
+        next.pinned = reordered
         return save(next)
     }
 
@@ -151,7 +161,10 @@ Item {
             if (!root.writing) fileView.reload()
         }
 
-        onSaved: root.writing = false
+        onSaved: {
+            root.writing = false
+            root.writePending()
+        }
         onSaveFailed: {
             root.writing = false
             root.reportError("could not write config.json; keeping settings in memory")
