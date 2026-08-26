@@ -13,6 +13,7 @@ Item {
     property string omarchyPath: ""
     property bool forcedReveal: false
     property string forcedMonitorName: ""
+    property var dockInstances: []
 
     ConfigService {
         id: configServiceObject
@@ -41,6 +42,9 @@ Item {
                 appService: root.appService
                 forcedReveal: root.forcedReveal
                     && (!root.forcedMonitorName || root.forcedMonitorName === dockInstance.monitorName)
+
+                Component.onCompleted: root.registerDockInstance(dockInstance)
+                Component.onDestruction: root.unregisterDockInstance(dockInstance)
             }
         }
     }
@@ -74,6 +78,25 @@ Item {
     }
 
     function status() {
+        var states = []
+        for (var index = 0; index < dockInstances.length; index += 1) {
+            states.push(dockInstances[index].runtimeStatus())
+        }
         return "ready forcedReveal=" + forcedReveal + " monitor=" + forcedMonitorName
+            + " docks=" + JSON.stringify(states)
+    }
+
+    function registerDockInstance(instance) {
+        var next = dockInstances.slice()
+        if (next.indexOf(instance) < 0) next.push(instance)
+        dockInstances = next
+    }
+
+    function unregisterDockInstance(instance) {
+        var next = []
+        for (var index = 0; index < dockInstances.length; index += 1) {
+            if (dockInstances[index] !== instance) next.push(dockInstances[index])
+        }
+        dockInstances = next
     }
 }

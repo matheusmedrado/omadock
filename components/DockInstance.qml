@@ -28,6 +28,21 @@ Item {
         return true
     }
 
+    function runtimeStatus() {
+        return {
+            monitor: root.monitorName,
+            enabled: root.monitorEnabled,
+            state: hideController.stateName,
+            revealProgress: hideController.revealProgress,
+            fullscreen: hideController.fullscreen,
+            windowConflict: hideController.windowConflict,
+            itemCount: root.appService && Array.isArray(root.appService.items)
+                ? root.appService.items.length : -1,
+            surfaceVisible: surface.visible,
+            surfaceSize: [surface.width, surface.height]
+        }
+    }
+
     HideController {
         id: hideController
         configuration: root.configuration
