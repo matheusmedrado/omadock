@@ -30,14 +30,53 @@ Item {
         return { x: x, y: y, width: width, height: height }
     }
 
-    function hyprFor(toplevel, hyprToplevels) {
+    function matchesIpc(toplevel, hyprToplevel) {
+        var ipc = hyprToplevel && hyprToplevel.lastIpcObject
+        if (!ipc) return false
+
+        var appId = String(toplevel && toplevel.appId || "").toLowerCase()
+        var className = String(ipc.class || ipc.initialClass || "").toLowerCase()
+        if (appId && className && appId !== className) return false
+
+        var title = String(toplevel && toplevel.title || "")
+        var ipcTitle = String(ipc.title || "")
+        return !title || !ipcTitle || title === ipcTitle
+    }
+
+    function hyprFor(toplevel, hyprToplevels, usedIndexes) {
         var attached = toplevel && toplevel.HyprlandToplevel
         if (attached) return attached
 
         for (var index = 0; index < hyprToplevels.length; index += 1) {
+            if (usedIndexes.indexOf(index) >= 0) continue
             if (hyprToplevels[index].wayland === toplevel
                     && hyprToplevels[index].lastIpcObject !== undefined) {
+                usedIndexes.push(index)
                 return hyprToplevels[index]
+            }
+        }
+
+        for (var exactIndex = 0; exactIndex < hyprToplevels.length; exactIndex += 1) {
+            if (usedIndexes.indexOf(exactIndex) >= 0) continue
+            if (matchesIpc(toplevel, hyprToplevels[exactIndex])) {
+                var ipc = hyprToplevels[exactIndex].lastIpcObject
+                var title = String(toplevel && toplevel.title || "")
+                var ipcTitle = String(ipc && ipc.title || "")
+                if (title && ipcTitle && title !== ipcTitle) continue
+                usedIndexes.push(exactIndex)
+                return hyprToplevels[exactIndex]
+            }
+        }
+
+        var appId = String(toplevel && toplevel.appId || "").toLowerCase()
+        for (var appIndex = 0; appIndex < hyprToplevels.length; appIndex += 1) {
+            if (usedIndexes.indexOf(appIndex) >= 0) continue
+            var appIpc = hyprToplevels[appIndex].lastIpcObject
+            var className = String(appIpc && (appIpc.class || appIpc.initialClass) || "")
+                .toLowerCase()
+            if (appId && className === appId) {
+                usedIndexes.push(appIndex)
+                return hyprToplevels[appIndex]
             }
         }
         return null
@@ -97,8 +136,13 @@ Item {
         var toplevels = modelValues(ToplevelManager.toplevels)
         var hyprToplevels = modelValues(Hyprland.toplevels)
         var nextRecords = []
+        var usedHyprIndexes = []
         for (var index = 0; index < toplevels.length; index += 1) {
-            nextRecords.push(normalizedRecord(toplevels[index], hyprFor(toplevels[index], hyprToplevels), index))
+            nextRecords.push(normalizedRecord(
+                toplevels[index],
+                hyprFor(toplevels[index], hyprToplevels, usedHyprIndexes),
+                index
+            ))
         }
         records = nextRecords
     }
