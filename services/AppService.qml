@@ -1,4 +1,250 @@
-import QtQuick
+import QtQml
+import Quickshell
+import "../models/AppMatcher.js" as AppMatcher
 
 QtObject {
+    id: root
+
+    property var configService
+    property var windowService
+    property var items: []
+    property var desktopEntries: []
+    property var desktopIndex: ({})
+    property var sequenceByKey: ({})
+    property int nextSequence: 0
+
+    signal launchFailed(string desktopId)
+
+    function modelValues(model) {
+        return model && model.values ? model.values : []
+    }
+
+    function currentConfig() {
+        return root.configService && root.configService.settings
+            ? root.configService.settings
+            : ({ pinned: [], aliases: {}, behavior: { showRunningUnpinned: true } })
+    }
+
+    function refreshDesktopEntries() {
+        desktopEntries = modelValues(DesktopEntries.applications)
+        var index = {}
+        for (var entryIndex = 0; entryIndex < desktopEntries.length; entryIndex += 1) {
+            var entry = desktopEntries[entryIndex]
+            var id = AppMatcher.normalizeId(entry && entry.id)
+            if (id) index[id] = entry
+        }
+        desktopIndex = index
+        scheduleRebuild()
+    }
+
+    function sequenceFor(key) {
+        if (sequenceByKey[key] === undefined) {
+            var next = {}
+            for (var existing in sequenceByKey) next[existing] = sequenceByKey[existing]
+            next[key] = nextSequence
+            nextSequence += 1
+            sequenceByKey = next
+        }
+        return sequenceByKey[key]
+    }
+
+    function labelFor(name, fallback) {
+        var value = String(name || fallback || "APP").replace(/\s+/g, " ").trim().toUpperCase()
+        return value.slice(0, 14)
+    }
+
+    function entryFor(desktopId) {
+        return desktopIndex[AppMatcher.normalizeId(desktopId)] || null
+    }
+
+    function appendWindow(groups, record, aliases) {
+        var result = AppMatcher.match(
+            record.appId,
+            desktopEntries,
+            aliases,
+            function(name) {
+                return typeof DesktopEntries.heuristicLookup === "function"
+                    ? DesktopEntries.heuristicLookup(name)
+                    : null
+            }
+        )
+        var entry = result && result.entry
+        var desktopId = entry ? String(entry.id) : ""
+        var normalizedAppId = AppMatcher.normalizeId(record.appId)
+        var key = desktopId ? "desktop:" + AppMatcher.normalizeId(desktopId) : "running:" + normalizedAppId
+
+        if (!groups[key]) {
+            groups[key] = {
+                key: key,
+                desktopId: desktopId,
+                appId: String(record.appId || ""),
+                entry: entry,
+                windows: [],
+                sequence: sequenceFor(key)
+            }
+        }
+        groups[key].windows.push(record)
+    }
+
+    function makeItem(group, desktopId, pinned, slot) {
+        var entry = desktopId ? entryFor(desktopId) : group.entry
+        var windows = group ? group.windows : []
+        var active = false
+        var urgent = false
+        for (var index = 0; index < windows.length; index += 1) {
+            active = active || !!windows[index].active
+            urgent = urgent || !!windows[index].urgent
+        }
+
+        var name = entry ? String(entry.name || desktopId) : (group ? group.appId : desktopId)
+        var icon = entry ? String(entry.icon || "") : ""
+        return {
+            key: pinned ? "desktop:" + AppMatcher.normalizeId(desktopId) : group.key,
+            desktopId: desktopId,
+            appId: group ? group.appId : desktopId,
+            name: name,
+            shortLabel: labelFor(name, desktopId),
+            icon: icon,
+            iconSource: icon ? Quickshell.iconPath(icon) : "",
+            pinned: pinned,
+            missing: !entry,
+            running: windows.length > 0,
+            active: active,
+            urgent: urgent,
+            windowCount: windows.length,
+            windows: windows,
+            slot: slot
+        }
+    }
+
+    function rebuild() {
+        var configuration = currentConfig()
+        var aliases = configuration.aliases || {}
+        var groups = {}
+        var records = root.windowService && root.windowService.records
+            ? root.windowService.records
+            : []
+
+        for (var recordIndex = 0; recordIndex < records.length; recordIndex += 1) {
+            if (records[recordIndex].appId) appendWindow(groups, records[recordIndex], aliases)
+        }
+
+        var nextItems = []
+        var pinnedKeys = {}
+        var pinned = Array.isArray(configuration.pinned) ? configuration.pinned : []
+        for (var pinIndex = 0; pinIndex < pinned.length; pinIndex += 1) {
+            var pin = pinned[pinIndex]
+            if (!pin || !pin.desktopId) continue
+            var desktopId = String(pin.desktopId).trim()
+            var key = "desktop:" + AppMatcher.normalizeId(desktopId)
+            var group = groups[key] || {
+                key: key,
+                desktopId: desktopId,
+                appId: desktopId,
+                entry: entryFor(desktopId),
+                windows: [],
+                sequence: sequenceFor(key)
+            }
+            pinnedKeys[key] = true
+            nextItems.push(makeItem(group, desktopId, true, pinIndex + 1))
+        }
+
+        if (configuration.behavior && configuration.behavior.showRunningUnpinned) {
+            var transientGroups = []
+            for (var groupKey in groups) {
+                if (!pinnedKeys[groupKey] && groups[groupKey].windows.length > 0) {
+                    transientGroups.push(groups[groupKey])
+                }
+            }
+            transientGroups.sort(function(first, second) { return first.sequence - second.sequence })
+            for (var transientIndex = 0; transientIndex < transientGroups.length; transientIndex += 1) {
+                nextItems.push(makeItem(transientGroups[transientIndex], "", false, 0))
+            }
+        }
+
+        items = nextItems
+    }
+
+    function scheduleRebuild() {
+        rebuildTimer.restart()
+    }
+
+    function launch(desktopId) {
+        var entry = entryFor(desktopId)
+        if (!entry || typeof entry.execute !== "function") {
+            launchFailed(String(desktopId || ""))
+            return false
+        }
+        entry.execute()
+        return true
+    }
+
+    function focusWindow(record) {
+        if (!record || !record.toplevel || typeof record.toplevel.activate !== "function") return false
+        record.toplevel.activate()
+        return true
+    }
+
+    function focusOrLaunch(item) {
+        if (!item || item.missing) return false
+        if (item.windowCount === 0) return launch(item.desktopId)
+        if (item.windowCount === 1) return focusWindow(item.windows[0])
+        return focusNext(item)
+    }
+
+    function focusNext(item) {
+        if (!item || item.windowCount === 0) return false
+        var nextIndex = 0
+        for (var index = 0; index < item.windows.length; index += 1) {
+            if (item.windows[index].active) {
+                nextIndex = (index + 1) % item.windows.length
+                break
+            }
+        }
+        return focusWindow(item.windows[nextIndex])
+    }
+
+    function launchNew(item) {
+        return item && !item.missing ? launch(item.desktopId) : false
+    }
+
+    function closeActive(item) {
+        if (!item || item.windowCount === 0) return false
+        for (var index = 0; index < item.windows.length; index += 1) {
+            var record = item.windows[index]
+            if (record.active && record.toplevel && typeof record.toplevel.close === "function") {
+                record.toplevel.close()
+                return true
+            }
+        }
+        return false
+    }
+
+    Timer {
+        id: rebuildTimer
+        interval: 0
+        repeat: false
+        onTriggered: root.rebuild()
+    }
+
+    Connections {
+        target: DesktopEntries.applications
+        function onObjectInsertedPost() { root.refreshDesktopEntries() }
+        function onObjectRemovedPost() { root.refreshDesktopEntries() }
+    }
+
+    Connections {
+        target: root.configService
+        function onConfigurationChanged() { root.scheduleRebuild() }
+    }
+
+    Connections {
+        target: root.windowService
+        function onRecordsChanged() { root.scheduleRebuild() }
+    }
+
+    Component.onCompleted: {
+        root.refreshDesktopEntries()
+        root.scheduleRebuild()
+    }
 }

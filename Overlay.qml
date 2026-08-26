@@ -1,4 +1,5 @@
 import QtQuick
+import "services"
 
 Item {
     id: root
@@ -8,6 +9,20 @@ Item {
     property var pluginRegistry
     property string omarchyPath: ""
     property bool forcedReveal: false
+
+    ConfigService {
+        id: configServiceObject
+    }
+
+    WindowService {
+        id: windowServiceObject
+    }
+
+    AppService {
+        id: appService
+        configService: configServiceObject
+        windowService: windowServiceObject
+    }
 
     function open(payload) {
         forcedReveal = true
