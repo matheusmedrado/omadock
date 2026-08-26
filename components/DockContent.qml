@@ -224,7 +224,7 @@ Item {
     }
 
     Connections {
-        target: root.configService
+        target: root.configService || null
         function onConfigurationChanged() { root.cancelDrag() }
     }
 

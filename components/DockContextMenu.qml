@@ -13,7 +13,7 @@ PopupWindow {
     property var appService
     property var configService
     property bool requestedOpen: false
-    signal closed()
+    signal menuClosed()
 
     readonly property var actions: ActionModel.actionsForItem(itemRecord)
     readonly property int padding: Style.space(4)
@@ -50,7 +50,7 @@ PopupWindow {
     }
 
     function close() {
-        closed()
+        menuClosed()
     }
 
     function trigger(action) {

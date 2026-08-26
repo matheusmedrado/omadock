@@ -149,7 +149,6 @@ Item {
 
     Connections {
         target: ToplevelManager
-        function onToplevelsChanged() { root.scheduleRefresh() }
         function onActiveToplevelChanged() { root.scheduleRefresh() }
     }
 
@@ -161,9 +160,6 @@ Item {
 
     Connections {
         target: Hyprland
-        function onToplevelsChanged() { root.scheduleRefresh() }
-        function onWorkspacesChanged() { root.scheduleRefresh() }
-        function onMonitorsChanged() { root.scheduleRefresh() }
         function onActiveToplevelChanged() { root.scheduleRefresh() }
         function onRawEvent(event) {
             if (root.isWorkspaceEvent(event)) root.workspaceTransition()

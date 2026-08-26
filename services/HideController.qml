@@ -228,7 +228,7 @@ Item {
     }
 
     Connections {
-        target: root.windowService
+        target: root.windowService || null
         function onRecordsChanged() { root.refreshModels() }
         function onWorkspaceTransition() {
             root.workspaceChanging = true
@@ -238,14 +238,12 @@ Item {
     }
 
     Connections {
-        target: root.monitor
+        target: root.monitor || null
         function onActiveWorkspaceChanged() { root.refreshModels() }
     }
 
     Connections {
         target: Hyprland
-        function onWorkspacesChanged() { root.refreshModels() }
-        function onMonitorsChanged() { root.refreshModels() }
         function onFocusedWorkspaceChanged() { root.refreshModels() }
     }
 

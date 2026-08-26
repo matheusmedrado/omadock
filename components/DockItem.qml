@@ -245,7 +245,7 @@ Item {
         appService: root.appService
         configService: root.configService
         requestedOpen: root.contextMenuOpen
-        onClosed: root.contextMenuOpen = false
+        onMenuClosed: root.contextMenuOpen = false
     }
 
     onContextMenuOpenChanged: {

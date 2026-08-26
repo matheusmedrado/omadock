@@ -22,9 +22,9 @@ PanelWindow {
     readonly property int surfaceHeight: dockContent.implicitHeight + edgeMargin
     readonly property real dockWidth: dockContent.width
     readonly property real dockHeight: dockContent.height
-    readonly property bool reserveSpace: configuration.behavior
+    readonly property bool reserveSpace: !!(configuration && configuration.behavior
         && configuration.behavior.hideMode === "never"
-        && configuration.behavior.reserveSpace === true
+        && configuration.behavior.reserveSpace === true)
 
     visible: root.requestedVisible && !remapGuard.remapping
     color: "transparent"

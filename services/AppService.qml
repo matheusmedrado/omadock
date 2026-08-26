@@ -266,12 +266,12 @@ Item {
     }
 
     Connections {
-        target: root.configService
+        target: root.configService || null
         function onConfigurationChanged() { root.scheduleRebuild() }
     }
 
     Connections {
-        target: root.windowService
+        target: root.windowService || null
         function onRecordsChanged() { root.scheduleRebuild() }
     }
 
