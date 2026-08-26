@@ -1,0 +1,12 @@
+# Local files and tests
+/local/
+
+# Editor and operating-system files
+.DS_Store
+*.swp
+.vscode/
+.idea/
+
+# Generated QML/cache files
+.qmlcache/
+*.qmlc
