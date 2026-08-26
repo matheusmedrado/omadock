@@ -16,18 +16,19 @@ Item {
         visible: !!root.itemRecord.iconSource
         source: root.itemRecord.iconSource || ""
         fillMode: Image.PreserveAspectFit
-        smooth: !root.usePixelGlyphs
-        mipmap: !root.usePixelGlyphs
+        smooth: true
+        mipmap: true
     }
 
     Text {
         anchors.fill: parent
         visible: !root.itemRecord.iconSource
-        text: root.itemRecord.missing ? "?" : (root.itemRecord.shortLabel || "APP").slice(0, 2)
+        text: DockModel.fallbackGlyph(root.itemRecord.shortLabel, root.itemRecord.desktopId)
         color: Color.bar.text
         font.family: Style.font.family
         font.pixelSize: Math.max(Style.font.body, root.iconSize * 0.42)
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
     }
+
 }

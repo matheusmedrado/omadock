@@ -32,4 +32,15 @@ TestCase {
         compare(DockModel.contentWidth(3, 44, 4), 140)
         compare(DockModel.contentWidth(2, 48, 0), 96)
     }
+
+    function test_visualLabelsUseCompactTerminalForms() {
+        compare(DockModel.slotLabel(3), "03")
+        compare(DockModel.slotLabel(123), "23")
+        compare(DockModel.slotLabel(0), "")
+        compare(DockModel.instanceCountLabel(1), "")
+        compare(DockModel.instanceCountLabel(2), "2x")
+        compare(DockModel.instanceCountLabel(2.9), "2x")
+        compare(DockModel.fallbackGlyph("Ghostty!", "fallback"), "GH")
+        compare(DockModel.fallbackGlyph("", "??"), "?")
+    }
 }

@@ -1,6 +1,8 @@
 # Asset Licenses
 
-No bundled assets are included yet.
+OmaDock currently ships no bundled image, font, or glyph assets. Its visual
+elements are QML primitives and Omarchy theme tokens; application icons are
+resolved from the host's desktop-entry/icon installation at runtime.
 
-When assets are added, record their source, author, license, modifications, and
-repository path here.
+If bundled assets are added, record their source, author, license,
+modifications, and repository path here.

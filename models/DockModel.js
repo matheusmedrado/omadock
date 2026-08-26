@@ -32,3 +32,21 @@ function contentWidth(itemCount, itemSize, gap) {
     var spacing = Math.max(0, Number(gap) || 0)
     return count > 0 ? count * size + (count - 1) * spacing : 0
 }
+
+function slotLabel(slot) {
+    var number = Number(slot)
+    if (!isFinite(number) || number <= 0) return ""
+    return ("0" + Math.floor(number)).slice(-2)
+}
+
+function instanceCountLabel(count) {
+    var number = Number(count)
+    if (!isFinite(number) || number < 2) return ""
+    return Math.floor(number) + "x"
+}
+
+function fallbackGlyph(label, fallback) {
+    var value = String(label || fallback || "APP")
+        .toUpperCase().replace(/[^A-Z0-9]/g, "")
+    return value.slice(0, 2) || "?"
+}

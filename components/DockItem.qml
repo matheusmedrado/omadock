@@ -33,6 +33,8 @@ Item {
     readonly property int iconSize: metrics.iconSize
     readonly property bool localActive: hasLocalActiveWindow()
     readonly property bool hasContextActions: ActionModel.actionsForItem(root.itemRecord).length > 0
+    readonly property string slotLabel: DockModel.slotLabel(root.itemRecord.slot)
+    readonly property string countLabel: DockModel.instanceCountLabel(root.itemRecord.windowCount)
     readonly property bool showSlotNumbers: configuration.appearance
         && configuration.appearance.showSlotNumbers !== false
     readonly property string showLabels: configuration.appearance && configuration.appearance.showLabels
@@ -68,12 +70,12 @@ Item {
 
     Text {
         id: slotNumber
-        visible: root.showSlotNumbers && root.itemRecord.slot > 0
+        visible: root.showSlotNumbers && root.slotLabel !== ""
         anchors.left: parent.left
         anchors.top: parent.top
         anchors.leftMargin: Style.space(4)
         anchors.topMargin: Style.space(2)
-        text: root.itemRecord.slot > 0 ? ("0" + root.itemRecord.slot).slice(-2) : ""
+        text: root.slotLabel
         color: root.pressed ? Color.background : Color.bar.text
         font.family: Style.font.family
         font.pixelSize: Style.font.caption
@@ -106,7 +108,7 @@ Item {
         anchors.bottom: parent.bottom
         anchors.bottomMargin: Style.space(2)
         width: Style.space(10)
-        height: Style.space(2)
+        height: Style.space(4)
         color: root.pressed ? Color.background : Color.accent
     }
 
@@ -114,11 +116,48 @@ Item {
         visible: !!root.itemRecord.urgent
         anchors.right: parent.right
         anchors.top: parent.top
-        anchors.rightMargin: Style.space(3)
-        anchors.topMargin: Style.space(3)
+        anchors.rightMargin: Style.space(5)
+        anchors.topMargin: Style.space(5)
+        width: Style.space(6)
+        height: width
+        rotation: 45
+        transformOrigin: Item.Center
+        color: Color.urgent
+    }
+
+    Rectangle {
+        visible: !!root.itemRecord.running && !root.localActive
+        anchors.left: parent.left
+        anchors.bottom: parent.bottom
+        anchors.leftMargin: Style.space(4)
+        anchors.bottomMargin: Style.space(3)
         width: Style.space(5)
         height: width
-        color: Color.urgent
+        color: Color.muted
+    }
+
+    Rectangle {
+        id: countBadge
+        visible: root.countLabel !== ""
+        anchors.right: parent.right
+        anchors.bottom: parent.bottom
+        anchors.rightMargin: Style.space(3)
+        anchors.bottomMargin: Style.space(3)
+        width: countText.implicitWidth + Style.space(6)
+        height: Style.space(13)
+        radius: Style.cornerRadius > 0 ? Math.min(Style.cornerRadius, 3) : 0
+        color: Color.bar.background
+        border.color: Color.muted
+        border.width: 1
+
+        Text {
+            id: countText
+            anchors.centerIn: parent
+            text: root.countLabel
+            color: root.pressed ? Color.background : Color.bar.text
+            font.family: Style.font.family
+            font.pixelSize: Style.font.caption
+        }
     }
 
     MouseArea {
@@ -194,7 +233,7 @@ Item {
         label: {
             var count = root.itemRecord.windowCount || 0
             var suffix = count > 0 ? "  " + count + "x" : ""
-            return (root.itemRecord.slot > 0 ? ("0" + root.itemRecord.slot).slice(-2) + "  " : "")
+            return (root.slotLabel !== "" ? root.slotLabel + "  " : "")
                 + (root.itemRecord.shortLabel || "APP") + suffix
         }
     }
