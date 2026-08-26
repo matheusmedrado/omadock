@@ -29,6 +29,21 @@ Item {
     }
 
     function runtimeStatus() {
+        var records = hideController.windowRecords()
+        var windows = []
+        for (var index = 0; index < records.length; index += 1) {
+            var record = records[index]
+            windows.push({
+                appId: record.appId,
+                workspaceId: record.workspaceId,
+                workspaceName: record.workspaceName,
+                monitor: record.monitorName,
+                geometry: record.geometry,
+                fullscreen: record.fullscreen,
+                maximized: record.maximized,
+                mapped: record.mapped
+            })
+        }
         return {
             monitor: root.monitorName,
             enabled: root.monitorEnabled,
@@ -36,6 +51,8 @@ Item {
             revealProgress: hideController.revealProgress,
             fullscreen: hideController.fullscreen,
             windowConflict: hideController.windowConflict,
+            windowRecordCount: records.length,
+            windows: windows,
             itemCount: root.appService && Array.isArray(root.appService.items)
                 ? root.appService.items.length : -1,
             surfaceVisible: surface.visible,
