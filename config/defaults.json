@@ -28,7 +28,8 @@
   },
   "pinned": [
     { "desktopId": "com.mitchellh.ghostty" },
-    { "desktopId": "chromium" }
+    { "desktopId": "zen" },
+    { "desktopId": "org.gnome.Nautilus" }
   ],
   "aliases": {}
 }
