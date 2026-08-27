@@ -32,12 +32,13 @@ function boundedInteger(value, fallback, minimum, maximum) {
 // config.json keeps validating.
 function surfaceMetrics(configuration) {
     var appearance = objectOrEmpty(configuration && configuration.appearance)
-    var glyphSize = boundedInteger(appearance.iconSize, 16, 10, 32)
-    var itemHeight = boundedInteger(appearance.itemSize, 28, glyphSize + 8, 56)
+    var glyphSize = boundedInteger(appearance.iconSize, 28, 14, 42)
+    var itemHeight = boundedInteger(appearance.itemSize, 40, glyphSize + 8, 72)
     var gap = boundedInteger(appearance.gap, 4, 0, 16)
     var edgeMargin = boundedInteger(appearance.edgeMargin, 8, 0, 32)
-    var contentPadding = appearance.density === "comfortable" ? 8 : 5
-    var itemPadding = appearance.density === "comfortable" ? 8 : 6
+    var contentPadding = appearance.density === "comfortable" ? 10 : 7
+    var itemPadding = appearance.density === "comfortable" ? 10 : 8
+    var ditherCell = boundedInteger(appearance.ditherCell, 2, 1, 6)
 
     return {
         glyphSize: glyphSize,
@@ -46,6 +47,7 @@ function surfaceMetrics(configuration) {
         edgeMargin: edgeMargin,
         contentPadding: contentPadding,
         itemPadding: itemPadding,
+        ditherCell: ditherCell,
         surfaceHeight: itemHeight + contentPadding * 2 + edgeMargin
     }
 }

@@ -6,13 +6,14 @@ TestCase {
 
     function test_defaultSurfaceMetrics() {
         var metrics = DockModel.surfaceMetrics({})
-        compare(metrics.glyphSize, 16)
-        compare(metrics.itemHeight, 28)
+        compare(metrics.glyphSize, 28)
+        compare(metrics.itemHeight, 40)
         compare(metrics.gap, 4)
         compare(metrics.edgeMargin, 8)
-        compare(metrics.contentPadding, 5)
-        compare(metrics.itemPadding, 6)
-        compare(metrics.surfaceHeight, 46)
+        compare(metrics.contentPadding, 7)
+        compare(metrics.itemPadding, 8)
+        compare(metrics.ditherCell, 2)
+        compare(metrics.surfaceHeight, 62)
     }
 
     function test_metricsRespectBounds() {
@@ -22,18 +23,18 @@ TestCase {
             gap: -4,
             edgeMargin: 100
         }})
-        compare(metrics.glyphSize, 32)
-        compare(metrics.itemHeight, 40)
+        compare(metrics.glyphSize, 42)
+        compare(metrics.itemHeight, 50)
         compare(metrics.gap, 0)
         compare(metrics.edgeMargin, 32)
-        compare(metrics.surfaceHeight, 82)
+        compare(metrics.surfaceHeight, 96)
     }
 
     function test_comfortableDensityAddsPadding() {
         var metrics = DockModel.surfaceMetrics({ appearance: { density: "comfortable" } })
-        compare(metrics.contentPadding, 8)
-        compare(metrics.itemPadding, 8)
-        compare(metrics.surfaceHeight, 52)
+        compare(metrics.contentPadding, 10)
+        compare(metrics.itemPadding, 10)
+        compare(metrics.surfaceHeight, 68)
     }
 
     function test_visualLabelsUseCompactTerminalForms() {

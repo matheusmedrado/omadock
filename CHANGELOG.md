@@ -25,6 +25,19 @@ All notable changes to OmaDock are documented here.
   longer cycles through every window at once, and scrolling back cycles backwards.
 - Window lists sort by address so "next window" stays stable between rebuilds.
 - Labels are shown by default and slot numbers hidden, matching the new layout.
+- Application glyphs are drawn as a 7x7 dot matrix rather than font icons, so the
+  artwork lives in the repository as editable bitmaps and shares the dock's
+  low-resolution character. `assets/glyphs` and the `usePixelGlyphs` setting now
+  mean what their names always said; set it to false for real application icons.
+- The prompt and the marker rules sit on the same matrix as the glyphs, so the
+  whole strip reads as one dot grid instead of mixing dots with vector strokes.
+- Added an ordered-dither (Bayer) texture that gathers along the bottom edge of
+  the strip, with hover and press drawn as a dithered wash rather than a flat
+  translucent fill. `appearance.showDither` and `appearance.ditherCell` control
+  it.
+- The strip is taller and roomier: a 28px glyph in a 40px row, up from 16 and 28.
+- The surface is opaque by default. At the previous 0.94 the window behind
+  showed through clearly enough to read.
 - `behavior.clickAction`, `middleClickAction`, and `wheelAction` are read at last.
   They were validated but never consulted, so the pointer bindings were fixed in
   code. Each now accepts a real set of values, including `none` to unbind.

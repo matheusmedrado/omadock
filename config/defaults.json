@@ -5,15 +5,17 @@
   "monitors": [],
   "appearance": {
     "density": "compact",
-    "iconSize": 16,
-    "itemSize": 28,
+    "iconSize": 28,
+    "itemSize": 40,
     "gap": 4,
     "edgeMargin": 8,
     "showSlotNumbers": false,
     "showLabels": "always",
     "showPrompt": true,
+    "showDither": true,
+    "ditherCell": 2,
     "usePixelGlyphs": true,
-    "backgroundOpacity": 0.94
+    "backgroundOpacity": 1.0
   },
   "behavior": {
     "hideMode": "smart",
@@ -28,9 +30,15 @@
     "wheelAction": "cycle-windows"
   },
   "pinned": [
-    { "desktopId": "com.mitchellh.ghostty" },
-    { "desktopId": "zen" },
-    { "desktopId": "org.gnome.Nautilus" }
+    {
+      "desktopId": "com.mitchellh.ghostty"
+    },
+    {
+      "desktopId": "zen"
+    },
+    {
+      "desktopId": "org.gnome.Nautilus"
+    }
   ],
   "aliases": {}
 }

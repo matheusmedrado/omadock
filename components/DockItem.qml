@@ -3,6 +3,7 @@ import qs.Commons
 import "../models/ActionModel.js" as ActionModel
 import "../models/DockModel.js" as DockModel
 import "../models/GlyphModel.js" as GlyphModel
+import "../models/PixelGlyphs.js" as PixelGlyphs
 
 Item {
     id: root
@@ -35,6 +36,13 @@ Item {
     readonly property int itemHeight: metrics.itemHeight
     readonly property int glyphSize: metrics.glyphSize
     readonly property int itemPadding: metrics.itemPadding
+    readonly property int ditherCell: metrics.ditherCell
+    // The marker sits on the glyph pitch so its dots line up with the matrix
+    // above them. A focused application spans its own width; a running one is a
+    // fixed short run.
+    readonly property int markerPitch: Math.max(2, Math.floor(metrics.glyphSize / 7))
+    readonly property int markerDots: root.localActive
+        ? Math.max(3, Math.floor(itemRow.implicitWidth / markerPitch)) : 3
     readonly property bool localActive: hasLocalActiveWindow()
     readonly property bool running: !!root.itemRecord.running
     readonly property bool urgent: !!root.itemRecord.urgent
@@ -78,12 +86,23 @@ Item {
     width: implicitWidth
     height: implicitHeight
 
-    Rectangle {
+    // Hover and press read as a dithered wash rising from the bottom of the
+    // item rather than a flat translucent fill, so the interaction states share
+    // the strip's texture instead of introducing a second visual language.
+    Item {
         anchors.fill: parent
-        radius: Style.cornerRadius > 0 ? Math.min(Style.cornerRadius, 6) : 0
-        color: root.pressed ? Style.pressedFill
-            : root.hovered || root.contextMenuOpen ? Style.hoverFill
-            : "transparent"
+        clip: true
+        visible: root.hovered || root.pressed || root.contextMenuOpen
+
+        DitherPattern {
+            anchors.fill: parent
+            cell: root.ditherCell
+            tint: root.pressed ? Color.accent : Color.bar.text
+            topCoverage: root.pressed ? 0.35 : 0.10
+            bottomCoverage: root.pressed ? 0.95 : 0.55
+            gamma: 1.4
+            opacity: root.pressed ? 0.5 : 0.35
+        }
     }
 
     Row {
@@ -128,23 +147,22 @@ Item {
         }
     }
 
-    // Marker rule: accent under the focused app, a dim rule under one that is
-    // merely running, nothing under a pinned app that is not.
-    Rectangle {
+    // Marker rule, drawn on the same matrix as the glyphs: a run of accent dots
+    // spanning the focused application, three dim dots under one that is merely
+    // running, nothing under a pinned application that is not.
+    DotMatrix {
+        id: marker
         visible: root.running
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.bottom: parent.bottom
-        anchors.bottomMargin: Style.space(2)
-        width: root.localActive ? itemRow.implicitWidth : Style.space(12)
-        height: Math.max(1, Style.space(2))
-        radius: height / 2
-        color: root.urgent ? Color.urgent
+        anchors.bottomMargin: Style.space(3)
+        pitch: root.markerPitch
+        rows: 1
+        columns: root.markerDots
+        cells: PixelGlyphs.ruleCells(root.markerDots)
+        tint: root.urgent ? Color.urgent
             : root.localActive ? Color.accent
-            : Util.alpha(Color.bar.text, 0.55)
-
-        Behavior on width {
-            NumberAnimation { duration: 120; easing.type: Easing.OutCubic }
-        }
+            : Util.alpha(Color.bar.text, 0.6)
     }
 
     MouseArea {

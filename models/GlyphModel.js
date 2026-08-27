@@ -1,58 +1,55 @@
 .pragma library
 
-// Curated monochrome glyphs drawn from the Nerd Font ranges the Omarchy system
-// monospace already ships, so the dock never has to paint a full-colour
-// application icon next to monospace text.
+// Application to glyph-key resolution. The keys name entries in PixelGlyphs, so
+// the artwork lives with the artwork and this file stays a lookup table.
 //
-// Resolution order is exact desktop id, then exact window app id, then a
-// keyword scan over both plus the display name, then a generic window glyph.
-// Keyword matching is what lets `org.gnome.Nautilus`, `nautilus`, and a window
-// that only reports `Files` all land on the same folder glyph.
+// Resolution order is exact desktop id, then exact window app id, then a keyword
+// scan over both plus the display name, then a generic window glyph. Keyword
+// matching is what lets `org.gnome.Nautilus`, `nautilus`, and a window that only
+// reports `Files` all land on the same folder glyph.
 
-var DEFAULT_GLYPH = ""
+var DEFAULT_GLYPH = "window"
 
 var EXACT = {
-    "com.mitchellh.ghostty": "",
-    "org.gnome.nautilus": "",
-    "org.gnome.settings": "",
-    "app.zen_browser.zen": "",
-    "zen": "",
-    "chromium": "",
-    "obsidian": "",
-    "spotify": "",
-    "steam": "",
-    "code": "",
-    "org.gnome.textEditor": ""
+    "com.mitchellh.ghostty": "terminal",
+    "org.gnome.nautilus": "folder",
+    "org.gnome.settings": "settings",
+    "app.zen_browser.zen": "browser",
+    "zen": "browser",
+    "chromium": "browser",
+    "obsidian": "notes",
+    "spotify": "music",
+    "steam": "game",
+    "code": "code",
+    "org.gnome.texteditor": "notes"
 }
 
 var KEYWORDS = [
-    { glyph: "", terms: ["ghostty", "alacritty", "kitty", "wezterm", "foot",
+    { glyph: "terminal", terms: ["ghostty", "alacritty", "kitty", "wezterm", "foot",
         "konsole", "terminal", "termite", "urxvt", "tmux"] },
-    { glyph: "", terms: ["firefox", "zen", "librewolf", "floorp", "waterfox"] },
-    { glyph: "", terms: ["chromium", "chrome", "brave", "vivaldi", "edge", "opera"] },
-    { glyph: "", terms: ["nautilus", "thunar", "dolphin", "nemo", "caja", "pcmanfm",
+    { glyph: "browser", terms: ["firefox", "zen", "librewolf", "floorp", "waterfox",
+        "chromium", "chrome", "brave", "vivaldi", "edge", "opera"] },
+    { glyph: "folder", terms: ["nautilus", "thunar", "dolphin", "nemo", "caja", "pcmanfm",
         "files", "ranger", "yazi", "filemanager"] },
-    { glyph: "", terms: ["code", "vscodium", "zed", "neovim", "nvim", "helix",
+    { glyph: "code", terms: ["code", "vscodium", "zed", "neovim", "nvim", "helix",
         "emacs", "sublime", "jetbrains", "intellij", "pycharm", "goland", "webstorm",
         "cursor", "editor"] },
-    { glyph: "", terms: ["spotify", "rhythmbox", "audacious", "clementine",
+    { glyph: "music", terms: ["spotify", "rhythmbox", "audacious", "clementine",
         "tidal", "music", "mpd", "ncmpcpp"] },
-    { glyph: "", terms: ["mpv", "vlc", "celluloid", "obs", "video", "player"] },
-    { glyph: "", terms: ["discord", "slack", "signal", "telegram", "element",
+    { glyph: "video", terms: ["mpv", "vlc", "celluloid", "obs", "video", "player"] },
+    { glyph: "chat", terms: ["discord", "slack", "signal", "telegram", "element",
         "whatsapp", "matrix", "chat", "messenger"] },
-    { glyph: "", terms: ["obsidian", "notion", "logseq", "joplin", "zotero",
-        "notes", "note"] },
-    { glyph: "", terms: ["steam", "lutris", "heroic", "bottles", "retroarch", "game"] },
-    { glyph: "", terms: ["gimp", "inkscape", "krita", "blender", "darktable",
-        "photo", "image", "viewer", "loupe"] },
-    { glyph: "", terms: ["thunderbird", "geary", "evolution", "mailspring", "mail"] },
-    { glyph: "", terms: ["docker", "podman", "container", "kubernetes"] },
-    { glyph: "", terms: ["libreoffice", "onlyoffice", "writer", "calc", "impress",
+    { glyph: "notes", terms: ["obsidian", "notion", "logseq", "joplin", "zotero",
+        "notes", "note", "libreoffice", "onlyoffice", "writer", "impress",
         "office", "document"] },
-    { glyph: "", terms: ["settings", "preferences", "control", "tweaks", "config"] },
-    { glyph: "", terms: ["tool", "utility", "monitor", "htop", "btop", "systemd"] },
-    { glyph: "", terms: ["clipboard", "clipse", "copyq"] },
-    { glyph: "", terms: ["hyprland", "omarchy", "shell", "compositor"] }
+    { glyph: "game", terms: ["steam", "lutris", "heroic", "bottles", "retroarch", "game"] },
+    { glyph: "image", terms: ["gimp", "inkscape", "krita", "blender", "darktable",
+        "photo", "image", "viewer", "loupe"] },
+    { glyph: "mail", terms: ["thunderbird", "geary", "evolution", "mailspring", "mail"] },
+    { glyph: "container", terms: ["docker", "podman", "container", "kubernetes"] },
+    { glyph: "settings", terms: ["settings", "preferences", "control", "tweaks", "config"] },
+    { glyph: "clipboard", terms: ["clipboard", "clipse", "copyq"] },
+    { glyph: "shell", terms: ["hyprland", "omarchy", "compositor"] }
 ]
 
 function normalize(value) {

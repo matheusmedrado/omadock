@@ -13,7 +13,7 @@ TestCase {
         var result = ConfigModel.normalizeConfig({ version: 1 })
         verify(result.valid)
         compare(result.value.position, "bottom")
-        compare(result.value.appearance.iconSize, 16)
+        compare(result.value.appearance.iconSize, 28)
         compare(result.value.behavior.hideMode, "smart")
     }
 
@@ -37,8 +37,8 @@ TestCase {
                 animationMs: 900
             }
         })
-        compare(result.value.appearance.iconSize, 32)
-        compare(result.value.appearance.itemSize, 40)
+        compare(result.value.appearance.iconSize, 42)
+        compare(result.value.appearance.itemSize, 50)
         compare(result.value.appearance.gap, 0)
         compare(result.value.appearance.edgeMargin, 32)
         compare(result.value.appearance.backgroundOpacity, 0.35)

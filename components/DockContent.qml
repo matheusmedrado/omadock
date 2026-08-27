@@ -1,6 +1,7 @@
 import QtQuick
 import qs.Commons
 import "../models/DockModel.js" as DockModel
+import "../models/PixelGlyphs.js" as PixelGlyphs
 
 Item {
     id: root
@@ -29,6 +30,10 @@ Item {
         ? DockModel.toArray(configuration.pinned).length : 0
     readonly property bool showPrompt: configuration.appearance
         && configuration.appearance.showPrompt !== false
+    readonly property bool showDither: configuration.appearance
+        && configuration.appearance.showDither !== false
+    readonly property int ditherCell: metrics.ditherCell
+    readonly property int glyphSize: metrics.glyphSize
     // Items carry their own label, so the strip is measured from what the row
     // actually lays out rather than from a fixed per-item width.
     readonly property real rowWidth: dockRow.implicitWidth
@@ -161,17 +166,39 @@ Item {
     // One surface for the whole strip. Individual items are unbordered so the
     // dock reads as a single prompt line rather than a shelf of tiles.
     Rectangle {
+        id: surface
         anchors.fill: parent
         radius: Style.cornerRadius > 0 ? Math.min(Style.cornerRadius, 10) : 0
         color: {
             var opacity = root.configuration.appearance
                 && root.configuration.appearance.backgroundOpacity !== undefined
-                ? root.configuration.appearance.backgroundOpacity : 0.94
+                ? root.configuration.appearance.backgroundOpacity : 1.0
             return Qt.rgba(Color.bar.background.r, Color.bar.background.g,
                            Color.bar.background.b, opacity)
         }
         border.color: Style.normalBorderColor
         border.width: Math.max(1, Style.normalBorderWidth)
+
+        // Clipped to the rounded surface so the texture stops at the border
+        // instead of squaring off the corners.
+        Item {
+            anchors.fill: parent
+            anchors.margins: surface.border.width
+            clip: true
+            visible: root.showDither
+
+            DitherPattern {
+                anchors.fill: parent
+                cell: root.ditherCell
+                tint: Color.bar.text
+                topCoverage: 0.0
+                bottomCoverage: 0.42
+                // Bias the ramp hard so the strip stays clear behind the labels
+                // and the texture only gathers along the bottom edge.
+                gamma: 3.4
+                opacity: 0.11
+            }
+        }
     }
 
     HoverHandler {
@@ -191,16 +218,24 @@ Item {
         anchors.centerIn: parent
         spacing: root.gap
 
-        Text {
+        // The prompt is on the matrix too, a step finer than the application
+        // glyphs so it reads as punctuation opening the line rather than as a
+        // fourth entry in the strip.
+        Item {
             anchors.verticalCenter: parent.verticalCenter
             visible: root.showPrompt
-            text: "❯"
-            color: Color.accent
-            font.family: Style.font.family
-            font.pixelSize: Style.font.subtitle
-            font.bold: true
-            leftPadding: Style.space(2)
-            rightPadding: Style.space(3)
+            implicitWidth: prompt.implicitWidth + Style.space(6)
+            implicitHeight: prompt.implicitHeight
+
+            DotMatrix {
+                id: prompt
+                anchors.centerIn: parent
+                cells: PixelGlyphs.cellsFor("prompt")
+                columns: PixelGlyphs.SIZE
+                rows: PixelGlyphs.SIZE
+                pitch: Math.max(2, Math.floor(root.glyphSize / PixelGlyphs.SIZE) - 1)
+                tint: Color.accent
+            }
         }
 
         Repeater {

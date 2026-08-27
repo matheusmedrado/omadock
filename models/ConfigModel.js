@@ -34,15 +34,17 @@ function defaultConfig() {
         monitors: [],
         appearance: {
             density: "compact",
-            iconSize: 16,
-            itemSize: 28,
+            iconSize: 28,
+            itemSize: 40,
             gap: 4,
             edgeMargin: 8,
             showSlotNumbers: false,
             showLabels: "always",
             showPrompt: true,
+            showDither: true,
+            ditherCell: 2,
             usePixelGlyphs: true,
-            backgroundOpacity: 0.94
+            backgroundOpacity: 1.0
         },
         behavior: {
             hideMode: "smart",
@@ -248,13 +250,15 @@ function normalizeConfig(raw, defaults) {
     var appearance = isObject(raw.appearance) ? raw.appearance : {}
     if (has(raw, "appearance") && !isObject(raw.appearance)) warning(warnings, "appearance", "was reset to its defaults")
     value.appearance.density = enumValue(appearance, "density", ["compact", "comfortable"], fallback.appearance.density, warnings, "appearance")
-    value.appearance.iconSize = intValue(appearance, "iconSize", fallback.appearance.iconSize, 10, 32, warnings, "appearance")
-    value.appearance.itemSize = intValue(appearance, "itemSize", fallback.appearance.itemSize, value.appearance.iconSize + 8, 56, warnings, "appearance")
+    value.appearance.iconSize = intValue(appearance, "iconSize", fallback.appearance.iconSize, 14, 42, warnings, "appearance")
+    value.appearance.itemSize = intValue(appearance, "itemSize", fallback.appearance.itemSize, value.appearance.iconSize + 8, 72, warnings, "appearance")
     value.appearance.gap = intValue(appearance, "gap", fallback.appearance.gap, 0, 16, warnings, "appearance")
     value.appearance.edgeMargin = intValue(appearance, "edgeMargin", fallback.appearance.edgeMargin, 0, 32, warnings, "appearance")
     value.appearance.showSlotNumbers = boolValue(appearance, "showSlotNumbers", fallback.appearance.showSlotNumbers, warnings, "appearance")
     value.appearance.showLabels = enumValue(appearance, "showLabels", ["always", "hover", "never"], fallback.appearance.showLabels, warnings, "appearance")
     value.appearance.showPrompt = boolValue(appearance, "showPrompt", fallback.appearance.showPrompt, warnings, "appearance")
+    value.appearance.showDither = boolValue(appearance, "showDither", fallback.appearance.showDither, warnings, "appearance")
+    value.appearance.ditherCell = intValue(appearance, "ditherCell", fallback.appearance.ditherCell, 1, 6, warnings, "appearance")
     value.appearance.usePixelGlyphs = boolValue(appearance, "usePixelGlyphs", fallback.appearance.usePixelGlyphs, warnings, "appearance")
     value.appearance.backgroundOpacity = realValue(appearance, "backgroundOpacity", fallback.appearance.backgroundOpacity, 0.35, 1.0, warnings, "appearance")
 
