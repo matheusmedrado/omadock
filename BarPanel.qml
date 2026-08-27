@@ -95,6 +95,11 @@ Panel {
         }
     }
 
+    // Segments rather than a dropdown. A dropdown opens a popup outside this
+    // panel, and the panel dismisses on a click outside it, so selecting an
+    // option closed the panel and threw the selection away. Options here are
+    // few and short, so laying them out inline is both more robust and quicker
+    // to read -- and selection can use the same brightness ladder as the dock.
     component ChoiceRow: Item {
         id: choice
         property string label: ""
@@ -104,24 +109,73 @@ Panel {
         signal picked(string value)
 
         width: parent ? parent.width : 0
-        implicitHeight: control.implicitHeight + (caption.visible ? caption.implicitHeight + Style.space(3) : 0)
+        implicitHeight: title.implicitHeight + Style.space(5) + segments.implicitHeight
+            + (caption.visible ? Style.space(4) + caption.implicitHeight : 0)
 
-        Dropdown {
-            id: control
-            width: parent.width
-            label: choice.label
-            value: choice.value
-            options: choice.options
-            fontFamily: root.fontFamily
-            onChanged: function(next) { choice.picked(next) }
+        Text {
+            id: title
+            anchors.top: parent.top
+            anchors.left: parent.left
+            text: choice.label
+            color: root.foreground
+            font.family: root.fontFamily
+            font.pixelSize: Style.font.body
         }
 
-        // Option labels stay short so the trigger never truncates; the
-        // explanation lives here instead.
+        Flow {
+            id: segments
+            anchors.top: title.bottom
+            anchors.topMargin: Style.space(5)
+            width: parent.width
+            spacing: Style.space(4)
+
+            Repeater {
+                model: choice.options
+
+                delegate: Rectangle {
+                    required property var modelData
+                    readonly property string optionValue: modelData && typeof modelData === "object"
+                        ? String(modelData.value) : String(modelData)
+                    readonly property string optionLabel: modelData && typeof modelData === "object"
+                        ? String(modelData.label) : String(modelData)
+                    readonly property bool selected: optionValue === choice.value
+
+                    implicitWidth: segmentLabel.implicitWidth + Style.space(18)
+                    implicitHeight: Math.round(Style.spacing.controlHeight * 0.86)
+                    radius: Style.cornerRadius > 0 ? Math.min(Style.cornerRadius, 6) : 0
+                    color: selected ? Util.alpha(root.foreground, 0.13)
+                        : segmentHover.containsMouse ? Util.alpha(root.foreground, 0.06)
+                        : "transparent"
+                    border.width: 1
+                    border.color: selected ? Util.alpha(root.foreground, 0.5)
+                        : Util.alpha(root.foreground, 0.18)
+
+                    Text {
+                        id: segmentLabel
+                        anchors.centerIn: parent
+                        text: parent.optionLabel
+                        color: parent.selected ? root.foreground
+                            : segmentHover.containsMouse ? Util.alpha(root.foreground, 0.85)
+                            : root.dim
+                        font.family: root.fontFamily
+                        font.pixelSize: Style.font.bodySmall
+                    }
+
+                    MouseArea {
+                        id: segmentHover
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: choice.picked(parent.optionValue)
+                    }
+                }
+            }
+        }
+
         Text {
             id: caption
-            anchors.top: control.bottom
-            anchors.topMargin: Style.space(3)
+            anchors.top: segments.bottom
+            anchors.topMargin: Style.space(4)
             width: parent.width
             visible: choice.description !== ""
             text: choice.description
