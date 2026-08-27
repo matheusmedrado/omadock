@@ -19,6 +19,8 @@ to remember.
 - Launch, focus, multi-window cycling, and safe context-menu actions.
 - Drag reorder for pinned apps, including pinning eligible running apps.
 - A bar widget with a preferences panel for hiding, layout, and pointer actions.
+- Dot-matrix glyphs resolved from the application, its name, or its desktop
+  entry categories.
 - Live Omarchy theme integration.
 - A JSON configuration file that survives updates and removal.
 - No daemon, polling loop, telemetry, network requests, or extra runtime.

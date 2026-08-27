@@ -14,7 +14,8 @@ Item {
     property bool useCuratedGlyphs: true
 
     readonly property string glyphKey: GlyphModel.glyphFor(
-        root.itemRecord.desktopId, root.itemRecord.appId, root.itemRecord.name)
+        root.itemRecord.desktopId, root.itemRecord.appId, root.itemRecord.name,
+        root.itemRecord.categories)
     readonly property bool useImage: !root.useCuratedGlyphs && !!root.itemRecord.iconSource
 
     // Whole-pixel pitch: a fractional one lands some dots a subpixel off and the

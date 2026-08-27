@@ -22,6 +22,12 @@ All notable changes to OmaDock are documented here.
 - `behavior.reserveSpace` now applies to every hide mode, not only `never`. A
   revealed dock takes an exclusive zone so windows move up rather than being
   covered, and gives it back once the dock has finished hiding.
+- Application glyphs fall back to the desktop entry's freedesktop `Categories`
+  before the generic window glyph, so an application whose id and name say
+  nothing about what it is still gets a meaningful one. Orca ships as
+  `stably-orca` with `Development;IDE;TextEditor;` and now reads as an editor.
+  Across a sample of 48 installed applications this took the generic fallback
+  from 25 down to 1.
 - Dragging a pinned application clear of the strip unpins it, closing the loop
   with dragging a running one in to pin it. Only vertical distance counts:
   dragging past either end is how an item is moved to the front or back, so

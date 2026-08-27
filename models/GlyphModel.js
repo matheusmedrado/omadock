@@ -52,6 +52,60 @@ var KEYWORDS = [
     { glyph: "shell", terms: ["hyprland", "omarchy", "compositor"] }
 ]
 
+// Freedesktop `Categories=` from the desktop entry, consulted when neither the
+// id nor the name says anything. This is what stops most applications falling
+// back to the generic window glyph: an entry declaring
+// `Development;IDE;TextEditor;` is an editor whether or not its name happens to
+// contain a word this file knows.
+//
+// Scanned in order, so the specific category wins over the broad one it sits
+// next to -- `System;TerminalEmulator;` is a terminal, not a settings panel, and
+// `Network;WebBrowser;` is a browser rather than a generic network tool.
+var CATEGORY_GLYPHS = [
+    { glyph: "terminal", terms: ["terminalemulator"] },
+    { glyph: "browser", terms: ["webbrowser"] },
+    { glyph: "folder", terms: ["filemanager", "filetools"] },
+    { glyph: "code", terms: ["development", "ide", "texteditor", "building", "debugger",
+        "guidesigner", "profiling", "revisioncontrol"] },
+    { glyph: "chat", terms: ["instantmessaging", "chat", "ircclient", "telephony",
+        "videoconference"] },
+    { glyph: "mail", terms: ["email", "contactmanagement"] },
+    { glyph: "music", terms: ["audio", "music", "midi", "mixer", "sequencer", "tuner"] },
+    { glyph: "video", terms: ["video", "player", "recorder", "tv", "audiovideoediting"] },
+    { glyph: "image", terms: ["graphics", "photography", "rastergraphics",
+        "vectorgraphics", "2dgraphics", "3dgraphics", "scanning", "ocr", "viewer"] },
+    { glyph: "game", terms: ["game"] },
+    { glyph: "notes", terms: ["office", "wordprocessor", "spreadsheet", "presentation",
+        "documentation", "publishing", "calendar", "projectmanagement", "dictionary",
+        "literature", "education", "science"] },
+    { glyph: "container", terms: ["emulator", "virtualization"] },
+    { glyph: "settings", terms: ["settings", "preferences", "hardwaresettings",
+        "packagemanager", "security", "accessibility"] },
+    { glyph: "shell", terms: ["desktopsettings", "windowmanager", "screensaver"] },
+    { glyph: "browser", terms: ["network", "webdevelopment"] },
+    { glyph: "settings", terms: ["system", "monitor", "utility"] }
+]
+
+// Whole tokens, not substrings. Categories are semicolon-delimited, and a
+// substring scan matches across them: "AudioVideo" contains "ide", so a music
+// player resolved to the code glyph.
+function categoryGlyph(categories) {
+    var present = {}
+    var tokens = normalize(categories).split(";")
+    for (var tokenIndex = 0; tokenIndex < tokens.length; tokenIndex += 1) {
+        var token = tokens[tokenIndex].replace(/[^a-z0-9]/g, "")
+        if (token) present[token] = true
+    }
+
+    for (var index = 0; index < CATEGORY_GLYPHS.length; index += 1) {
+        var entry = CATEGORY_GLYPHS[index]
+        for (var termIndex = 0; termIndex < entry.terms.length; termIndex += 1) {
+            if (present[entry.terms[termIndex]]) return entry.glyph
+        }
+    }
+    return ""
+}
+
 function normalize(value) {
     var text = String(value || "").trim().toLowerCase()
     return text.slice(-8) === ".desktop" ? text.slice(0, -8) : text
@@ -77,14 +131,14 @@ function keywordGlyph(haystack) {
     return ""
 }
 
-function glyphFor(desktopId, appId, name) {
+function glyphFor(desktopId, appId, name, categories) {
     var direct = exactGlyph(desktopId) || exactGlyph(appId)
     if (direct) return direct
 
     var haystack = [normalize(desktopId), normalize(appId), normalize(name)]
         .filter(function(part) { return part !== "" })
         .join(" ")
-    return keywordGlyph(haystack) || DEFAULT_GLYPH
+    return keywordGlyph(haystack) || categoryGlyph(categories) || DEFAULT_GLYPH
 }
 
 // Short command-style label. Terminal commands are lowercase, and the trailing

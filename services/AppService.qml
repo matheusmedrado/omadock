@@ -126,6 +126,9 @@ Item {
             shortLabel: labelFor(name, resolvedDesktopId),
             icon: icon,
             iconSource: icon ? iconSourceFor(entry) : "",
+            // Freedesktop Categories, so a glyph can be chosen for an
+            // application whose name says nothing about what it is.
+            categories: entry ? String(entry.categories || "") : "",
             pinned: pinned,
             missing: !entry,
             running: windows.length > 0,
