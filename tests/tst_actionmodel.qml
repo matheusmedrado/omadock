@@ -15,6 +15,35 @@ TestCase {
         }
     }
 
+    // An application that is uninstalled, or was never installed on this
+    // machine, still has to be removable. Both routes out were gated on the
+    // desktop entry resolving, which left the pin stuck in the dock forever.
+    function test_aPinIsRemovableEvenWhenTheApplicationIsGone() {
+        var gone = { pinned: true, missing: true, desktopId: "com.mitchellh.ghostty",
+                     windowCount: 0 }
+        var keys = ActionModel.actionsForItem(gone).map(function(a) { return a.key })
+        compare(keys.indexOf("unpin") >= 0, true, "a missing pin must still offer unpin")
+        compare(keys.indexOf("launch-new"), -1, "a missing application cannot be launched")
+        compare(keys.indexOf("pin"), -1)
+    }
+
+    function test_pinningStillRequiresSomethingLaunchable() {
+        var unmatched = { pinned: false, missing: true, desktopId: "", windowCount: 1 }
+        var keys = ActionModel.actionsForItem(unmatched).map(function(a) { return a.key })
+        compare(keys.indexOf("pin"), -1, "an unmatched window has no desktop entry to pin")
+        compare(keys.indexOf("unpin"), -1)
+
+        var running = { pinned: false, missing: false, desktopId: "zen", windowCount: 1 }
+        var runningKeys = ActionModel.actionsForItem(running).map(function(a) { return a.key })
+        compare(runningKeys.indexOf("pin") >= 0, true)
+    }
+
+    function test_aPinWithoutADesktopIdOffersNothingToRemove() {
+        var broken = { pinned: true, missing: true, desktopId: "", windowCount: 0 }
+        var keys = ActionModel.actionsForItem(broken).map(function(a) { return a.key })
+        compare(keys.indexOf("unpin"), -1)
+    }
+
     function test_pointerActionsFallBackWhenUnconfigured() {
         compare(ActionModel.clickAction({}), "focus-or-launch")
         compare(ActionModel.middleClickAction({}), "launch-new")

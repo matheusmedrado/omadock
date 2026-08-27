@@ -31,12 +31,6 @@
   },
   "pinned": [
     {
-      "desktopId": "com.mitchellh.ghostty"
-    },
-    {
-      "desktopId": "zen"
-    },
-    {
       "desktopId": "org.gnome.Nautilus"
     }
   ],

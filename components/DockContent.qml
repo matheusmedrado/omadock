@@ -48,8 +48,12 @@ Item {
         return String(itemRecord && (itemRecord.key || itemRecord.desktopId) || "item")
     }
 
+    // A pinned entry is always draggable, installed or not, because dragging it
+    // out of the strip is one of the two ways to remove it. Requiring a resolved
+    // desktop entry closed that route for exactly the pins that need it.
     function canDrag(itemRecord) {
-        return !!itemRecord && !itemRecord.missing && !!String(itemRecord.desktopId || "")
+        if (!itemRecord || !String(itemRecord.desktopId || "")) return false
+        return !!itemRecord.pinned || !itemRecord.missing
     }
 
     function beginDrag(index, itemRecord) {

@@ -80,11 +80,17 @@ function actionsForItem(item) {
     if (Number(item.windowCount) > 1) {
         actions.push({ key: "focus-next", label: "Focus next instance" })
     }
-    if (isLaunchable(item)) {
-        actions.push({
-            key: item.pinned ? "unpin" : "pin",
-            label: item.pinned ? "Unpin" : "Pin"
-        })
+    // Unpinning must not depend on the application still being installed.
+    // Gating both halves on "launchable" meant a pin whose desktop entry had
+    // gone -- because the application was uninstalled, or was never installed on
+    // this machine -- offered no way out, which is exactly the pin you most need
+    // to remove. Pinning still requires something launchable to pin.
+    if (item.pinned) {
+        if (typeof item.desktopId === "string" && item.desktopId.trim() !== "") {
+            actions.push({ key: "unpin", label: "Unpin" })
+        }
+    } else if (isLaunchable(item)) {
+        actions.push({ key: "pin", label: "Pin" })
     }
     if (Number(item.windowCount) > 0) {
         actions.push({ key: "close-active", label: "Close active instance" })

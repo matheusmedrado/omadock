@@ -58,9 +58,11 @@ function defaultConfig() {
             middleClickAction: "launch-new",
             wheelAction: "cycle-windows"
         },
+        // Only Nautilus, which ships in omarchy-base.packages and is therefore
+        // on every Omarchy install. Ghostty and Zen are in neither package list,
+        // so shipping them as defaults put a pin in the dock that some machines
+        // could not launch.
         pinned: [
-            { desktopId: "com.mitchellh.ghostty" },
-            { desktopId: "zen" },
             { desktopId: "org.gnome.Nautilus" }
         ],
         aliases: {}

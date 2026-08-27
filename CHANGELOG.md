@@ -79,6 +79,16 @@ All notable changes to OmaDock are documented here.
 
 ### Fixed
 
+- A pinned application that is not installed could not be removed. Both routes
+  out -- the context menu and dragging clear of the strip -- were gated on the
+  desktop entry resolving, so a pin left behind by an uninstalled application, or
+  shipped as a default the machine never had, stayed in the dock permanently.
+  Unpinning now only requires the entry to be pinned; pinning still requires
+  something launchable.
+- The default pins were Ghostty, Zen, and Nautilus, of which only Nautilus is in
+  `omarchy-base.packages`. A fresh install on a machine without the other two got
+  pins it could neither launch nor remove. The default is now Nautilus alone.
+
 - Reserving space under Smart Hide would have deadlocked the dock open. Revealing
   pushes tiled windows clear, which erases the overlap that justified hiding, so
   the dock would reveal once and never hide again. Compensating the geometry by
