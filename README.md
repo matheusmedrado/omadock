@@ -1,6 +1,12 @@
-# OmaDock
+<h1 align="center">OmaDock</h1>
 
-A fast, terminal-inspired application dock for Omarchy Quattro.
+<p align="center">
+  A fast, terminal-inspired application dock for Omarchy Quattro.
+</p>
+
+<p align="center">
+  <img src="omaDock.png" alt="OmaDock sitting at the bottom of the Omarchy desktop" width="100%">
+</p>
 
 OmaDock is a native Quickshell overlay for Hyprland. It helps you launch,
 focus, and cycle through applications while staying out of the way when it is
@@ -9,7 +15,21 @@ to remember.
 
 > The dock hides so your windows can shine. Mostly.
 
+Every entry is a dot-matrix glyph beside a lowercase command label, over an
+ordered-dither texture. State is a brightness ladder: the application you are on
+is fully lit, a running one sits below it, and a pinned one that is not running
+stays dim.
+
 ![OmaDock preview](preview.png)
+
+## In motion
+
+Smart Hide keeps the dock out of the way until you reach for it, and the bar
+widget changes any of it live.
+
+<p align="center">
+  <img src="display.gif" alt="OmaDock revealing on edge hover, switching modes, and reordering pins" width="100%">
+</p>
 
 ## Features
 
