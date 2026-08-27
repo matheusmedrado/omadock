@@ -18,11 +18,16 @@ All notable changes to OmaDock are documented here.
 - Redesigned the dock as a terminal command strip: one bordered surface with a
   prompt, and a monochrome glyph beside a lowercase command-style label per
   application, replacing the row of bordered icon tiles.
-- Application state is carried by brightness alone. The focused application is
-  lit in the accent colour, a running one sits at normal weight, and a pinned one
-  that is not running stays dim; hovering a dim entry lifts it. Nothing moves,
-  resizes, or gains a background between states, and the three-dot marker under a
-  running application keeps its length in every state.
+- Application state is a brightness ladder with the application you are on at the
+  top: focused is fully lit, running sits below it, and a pinned application that
+  is not running is dimmest. Hovering lifts an entry one step, so a running window
+  you are not focused on brightens too, not just an unopened one. The ladder is
+  built from the theme's text colour rather than its accent, because an accent is
+  frequently the darker of the two (Omarchy's default ships `#798186` against
+  `#cacccc`) and colouring the focused entry with it put the one you were on below
+  its neighbours. Accent now appears only on the marker under the focused entry.
+- Nothing moves, resizes, or gains a background between states; the three-dot
+  marker keeps its length and only changes colour.
 - Scroll-to-cycle accumulates wheel deltas into notches, so one touchpad flick no
   longer cycles through every window at once, and scrolling back cycles backwards.
 - Window lists sort by address so "next window" stays stable between rebuilds.

@@ -55,17 +55,26 @@ Item {
     readonly property bool labelVisible: root.showLabels === "always"
         || (root.showLabels === "hover" && root.hovered)
 
-    // Every state is carried by brightness alone: nothing moves, resizes, or
-    // gains a background. A pinned application that is not running sits dim so
-    // the strip reads like a command history where only live entries are lit,
-    // and hovering one lifts it towards the running ones. Not readonly, because
-    // Behavior needs to intercept the binding's writes to ease them.
-    property color itemColor: {
-        if (root.urgent) return Color.urgent
-        if (root.localActive || root.pressed) return Color.accent
-        if (root.running) return Color.bar.text
-        return Util.alpha(Color.bar.text, root.hovered ? 0.9 : 0.4)
+    // Brightness is the whole state system, so it runs as a ladder with the
+    // application you are actually on at the top: focused, then running, then
+    // pinned but not running. Hovering lifts an entry one step, which every
+    // entry except the focused one has room for -- that one is already at the
+    // top and stays put.
+    //
+    // The ladder is built from the text colour, not the accent. A theme's accent
+    // is frequently darker than its foreground (Omarchy's default ships #798186
+    // against #cacccc), so colouring the focused entry with it would place the
+    // one you are on *below* its neighbours. Accent stays on the marker, where it
+    // tags the focused entry without having to carry brightness.
+    readonly property real stateAlpha: {
+        if (root.localActive || root.pressed) return 1.0
+        if (root.running) return root.hovered ? 0.85 : 0.62
+        return root.hovered ? 0.62 : 0.32
     }
+
+    // Not readonly: Behavior has to intercept the binding's writes to ease them.
+    property color itemColor: root.urgent
+        ? Color.urgent : Util.alpha(Color.bar.text, root.stateAlpha)
 
     Behavior on itemColor {
         ColorAnimation { duration: 120; easing.type: Easing.OutCubic }
@@ -145,7 +154,7 @@ Item {
         cells: PixelGlyphs.ruleCells(root.markerDots)
         tint: root.urgent ? Color.urgent
             : root.localActive ? Color.accent
-            : Util.alpha(Color.bar.text, 0.35)
+            : Util.alpha(Color.bar.text, root.hovered ? 0.6 : 0.32)
 
         Behavior on tint {
             ColorAnimation { duration: 120; easing.type: Easing.OutCubic }

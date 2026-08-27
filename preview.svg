@@ -3,20 +3,20 @@
   <title>OmaDock</title>
   <desc>The dock is a single command strip. A dot-matrix prompt opens the line and
   each application is a dot-matrix glyph beside a lowercase command label, over an
-  ordered-dither texture that gathers along the bottom edge. State is carried by
-  brightness alone: the focused application is lit in the accent colour, a running
-  one sits at normal weight, and a pinned one that is not running stays dim.
-  Nothing moves or resizes between states.</desc>
+  ordered-dither texture that gathers along the bottom edge. State is a brightness
+  ladder with the application you are on at the top: focused is fully lit, running
+  sits below it, and a pinned application that is not running is dimmest. Hovering
+  lifts an entry one step. Nothing moves or resizes between states; the accent
+  colour appears only on the marker under a focused application.</desc>
 
   <style>
     .surface { fill: #101315; }
     .border  { fill: none; stroke: #cacccc; stroke-opacity: 0.4; stroke-width: 1; }
     .dot     { fill: #cacccc; }
-    .accent  { fill: #7aa88a; }
-    .faint   { fill-opacity: 0.35; }
+    .accent  { fill: #798186; }
+    .faint   { fill-opacity: 0.32; }
     .dither  { fill: #cacccc; fill-opacity: 0.09; }
     .label   { fill: #cacccc; font-family: "JetBrains Mono", "DejaVu Sans Mono", monospace; font-size: 12px; }
-    .dim     { fill-opacity: 0.4; }
     .caption { fill: #707880; font-family: "JetBrains Mono", "DejaVu Sans Mono", monospace; font-size: 7.5px; }
     .leader  { stroke: #707880; stroke-width: 0.5; stroke-opacity: 0.7; fill: none; }
   </style>
@@ -438,51 +438,51 @@
         <rect x="360" y="52" width="2" height="2"/>
     </g>
 
-    <g>
-      <circle class="dot accent" cx="18.5" cy="21" r="1"/>
-      <circle class="dot accent" cx="21.5" cy="21" r="1"/>
-      <circle class="dot accent" cx="21.5" cy="24" r="1"/>
-      <circle class="dot accent" cx="24.5" cy="24" r="1"/>
-      <circle class="dot accent" cx="24.5" cy="27" r="1"/>
-      <circle class="dot accent" cx="27.5" cy="27" r="1"/>
-      <circle class="dot accent" cx="21.5" cy="30" r="1"/>
-      <circle class="dot accent" cx="24.5" cy="30" r="1"/>
-      <circle class="dot accent" cx="18.5" cy="33" r="1"/>
-      <circle class="dot accent" cx="21.5" cy="33" r="1"/>
+    <g opacity="0.62">
+      <circle class="dot" cx="18.5" cy="21" r="1"/>
+      <circle class="dot" cx="21.5" cy="21" r="1"/>
+      <circle class="dot" cx="21.5" cy="24" r="1"/>
+      <circle class="dot" cx="24.5" cy="24" r="1"/>
+      <circle class="dot" cx="24.5" cy="27" r="1"/>
+      <circle class="dot" cx="27.5" cy="27" r="1"/>
+      <circle class="dot" cx="21.5" cy="30" r="1"/>
+      <circle class="dot" cx="24.5" cy="30" r="1"/>
+      <circle class="dot" cx="18.5" cy="33" r="1"/>
+      <circle class="dot" cx="21.5" cy="33" r="1"/>
     </g>
 
-    <g>
-      <circle class="dot accent" cx="53" cy="12" r="1.5"/>
-      <circle class="dot accent" cx="57" cy="12" r="1.5"/>
-      <circle class="dot accent" cx="61" cy="12" r="1.5"/>
-      <circle class="dot accent" cx="65" cy="12" r="1.5"/>
-      <circle class="dot accent" cx="69" cy="12" r="1.5"/>
-      <circle class="dot accent" cx="49" cy="16" r="1.5"/>
-      <circle class="dot accent" cx="73" cy="16" r="1.5"/>
-      <circle class="dot accent" cx="49" cy="20" r="1.5"/>
-      <circle class="dot accent" cx="57" cy="20" r="1.5"/>
-      <circle class="dot accent" cx="73" cy="20" r="1.5"/>
-      <circle class="dot accent" cx="49" cy="24" r="1.5"/>
-      <circle class="dot accent" cx="61" cy="24" r="1.5"/>
-      <circle class="dot accent" cx="73" cy="24" r="1.5"/>
-      <circle class="dot accent" cx="49" cy="28" r="1.5"/>
-      <circle class="dot accent" cx="57" cy="28" r="1.5"/>
-      <circle class="dot accent" cx="73" cy="28" r="1.5"/>
-      <circle class="dot accent" cx="49" cy="32" r="1.5"/>
-      <circle class="dot accent" cx="73" cy="32" r="1.5"/>
-      <circle class="dot accent" cx="53" cy="36" r="1.5"/>
-      <circle class="dot accent" cx="57" cy="36" r="1.5"/>
-      <circle class="dot accent" cx="61" cy="36" r="1.5"/>
-      <circle class="dot accent" cx="65" cy="36" r="1.5"/>
-      <circle class="dot accent" cx="69" cy="36" r="1.5"/>
-      <text class="label accent" x="82" y="28.32">ghostty</text>
+    <g opacity="1">
+      <circle class="dot" cx="53" cy="12" r="1.5"/>
+      <circle class="dot" cx="57" cy="12" r="1.5"/>
+      <circle class="dot" cx="61" cy="12" r="1.5"/>
+      <circle class="dot" cx="65" cy="12" r="1.5"/>
+      <circle class="dot" cx="69" cy="12" r="1.5"/>
+      <circle class="dot" cx="49" cy="16" r="1.5"/>
+      <circle class="dot" cx="73" cy="16" r="1.5"/>
+      <circle class="dot" cx="49" cy="20" r="1.5"/>
+      <circle class="dot" cx="57" cy="20" r="1.5"/>
+      <circle class="dot" cx="73" cy="20" r="1.5"/>
+      <circle class="dot" cx="49" cy="24" r="1.5"/>
+      <circle class="dot" cx="61" cy="24" r="1.5"/>
+      <circle class="dot" cx="73" cy="24" r="1.5"/>
+      <circle class="dot" cx="49" cy="28" r="1.5"/>
+      <circle class="dot" cx="57" cy="28" r="1.5"/>
+      <circle class="dot" cx="73" cy="28" r="1.5"/>
+      <circle class="dot" cx="49" cy="32" r="1.5"/>
+      <circle class="dot" cx="73" cy="32" r="1.5"/>
+      <circle class="dot" cx="53" cy="36" r="1.5"/>
+      <circle class="dot" cx="57" cy="36" r="1.5"/>
+      <circle class="dot" cx="61" cy="36" r="1.5"/>
+      <circle class="dot" cx="65" cy="36" r="1.5"/>
+      <circle class="dot" cx="69" cy="36" r="1.5"/>
+      <text class="label" x="82" y="28.32">ghostty</text>
     </g>
     <g>
       <circle class="dot accent" cx="57" cy="43" r="1.5"/>
       <circle class="dot accent" cx="61" cy="43" r="1.5"/>
       <circle class="dot accent" cx="65" cy="43" r="1.5"/>
     </g>
-    <g>
+    <g opacity="0.62">
       <circle class="dot" cx="158.4" cy="12" r="1.5"/>
       <circle class="dot" cx="162.4" cy="12" r="1.5"/>
       <circle class="dot" cx="166.4" cy="12" r="1.5"/>
@@ -507,27 +507,27 @@
       <circle class="dot faint" cx="162.4" cy="43" r="1.5"/>
       <circle class="dot faint" cx="166.4" cy="43" r="1.5"/>
     </g>
-    <g>
-      <circle class="dot dim" cx="280.6" cy="16" r="1.5"/>
-      <circle class="dot dim" cx="284.6" cy="16" r="1.5"/>
-      <circle class="dot dim" cx="288.6" cy="16" r="1.5"/>
-      <circle class="dot dim" cx="280.6" cy="20" r="1.5"/>
-      <circle class="dot dim" cx="284.6" cy="20" r="1.5"/>
-      <circle class="dot dim" cx="288.6" cy="20" r="1.5"/>
-      <circle class="dot dim" cx="292.6" cy="20" r="1.5"/>
-      <circle class="dot dim" cx="296.6" cy="20" r="1.5"/>
-      <circle class="dot dim" cx="300.6" cy="20" r="1.5"/>
-      <circle class="dot dim" cx="280.6" cy="24" r="1.5"/>
-      <circle class="dot dim" cx="300.6" cy="24" r="1.5"/>
-      <circle class="dot dim" cx="280.6" cy="28" r="1.5"/>
-      <circle class="dot dim" cx="300.6" cy="28" r="1.5"/>
-      <circle class="dot dim" cx="280.6" cy="32" r="1.5"/>
-      <circle class="dot dim" cx="284.6" cy="32" r="1.5"/>
-      <circle class="dot dim" cx="288.6" cy="32" r="1.5"/>
-      <circle class="dot dim" cx="292.6" cy="32" r="1.5"/>
-      <circle class="dot dim" cx="296.6" cy="32" r="1.5"/>
-      <circle class="dot dim" cx="300.6" cy="32" r="1.5"/>
-      <text class="label dim" x="313.6" y="28.32">files</text>
+    <g opacity="0.32">
+      <circle class="dot" cx="280.6" cy="16" r="1.5"/>
+      <circle class="dot" cx="284.6" cy="16" r="1.5"/>
+      <circle class="dot" cx="288.6" cy="16" r="1.5"/>
+      <circle class="dot" cx="280.6" cy="20" r="1.5"/>
+      <circle class="dot" cx="284.6" cy="20" r="1.5"/>
+      <circle class="dot" cx="288.6" cy="20" r="1.5"/>
+      <circle class="dot" cx="292.6" cy="20" r="1.5"/>
+      <circle class="dot" cx="296.6" cy="20" r="1.5"/>
+      <circle class="dot" cx="300.6" cy="20" r="1.5"/>
+      <circle class="dot" cx="280.6" cy="24" r="1.5"/>
+      <circle class="dot" cx="300.6" cy="24" r="1.5"/>
+      <circle class="dot" cx="280.6" cy="28" r="1.5"/>
+      <circle class="dot" cx="300.6" cy="28" r="1.5"/>
+      <circle class="dot" cx="280.6" cy="32" r="1.5"/>
+      <circle class="dot" cx="284.6" cy="32" r="1.5"/>
+      <circle class="dot" cx="288.6" cy="32" r="1.5"/>
+      <circle class="dot" cx="292.6" cy="32" r="1.5"/>
+      <circle class="dot" cx="296.6" cy="32" r="1.5"/>
+      <circle class="dot" cx="300.6" cy="32" r="1.5"/>
+      <text class="label" x="313.6" y="28.32">files</text>
     </g>
 
     <rect class="border" x="0.5" y="0.5" width="362" height="53" rx="10"/>
