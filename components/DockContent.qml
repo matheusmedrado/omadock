@@ -21,6 +21,7 @@ Item {
     property int dragSourcePinnedIndex: -1
     property int dragTargetIndex: -1
     property real dragPointerX: -1
+    property real dragPointerY: 0
     readonly property var metrics: DockModel.surfaceMetrics(configuration)
     readonly property int itemHeight: metrics.itemHeight
     readonly property int gap: metrics.gap
@@ -113,10 +114,18 @@ Item {
         return target
     }
 
-    function updateDrag(pointerX) {
+    // A pinned item pulled clear of the strip is on its way out, so it stops
+    // looking for an insertion point.
+    readonly property int removeThreshold: Math.round(root.itemHeight * 0.75)
+    readonly property bool dragWillRemove: root.dragActive && root.dragSourcePinned
+        && !!root.configService
+        && DockModel.dragLeavesStrip(root.dragPointerY, root.height, root.removeThreshold)
+
+    function updateDrag(pointerX, pointerY) {
         if (!root.dragActive) return
         root.dragPointerX = pointerX
-        root.dragTargetIndex = root.targetForX(pointerX)
+        if (pointerY !== undefined) root.dragPointerY = pointerY
+        root.dragTargetIndex = root.dragWillRemove ? -1 : root.targetForX(pointerX)
     }
 
     function clearDrag() {
@@ -131,19 +140,23 @@ Item {
         root.dragSourcePinnedIndex = -1
         root.dragTargetIndex = -1
         root.dragPointerX = -1
+        root.dragPointerY = 0
     }
 
-    function finishDrag(pointerX) {
+    function finishDrag(pointerX, pointerY) {
         if (!root.dragActive) return false
-        if (pointerX !== undefined) root.updateDrag(pointerX)
+        if (pointerX !== undefined) root.updateDrag(pointerX, pointerY)
 
         var sourcePinned = root.dragSourcePinned
         var sourceIndex = root.dragSourcePinnedIndex
         var targetIndex = root.dragTargetIndex
         var desktopId = root.dragSourceDesktopId
+        var removing = root.dragWillRemove
         root.clearDrag()
 
-        if (targetIndex < 0 || !desktopId || !root.configService) return false
+        if (!desktopId || !root.configService) return false
+        if (removing) return root.configService.unpin(desktopId)
+        if (targetIndex < 0) return false
         if (sourcePinned) return root.configService.reorderPinned(sourceIndex, targetIndex)
         return root.configService.pinAt(desktopId, targetIndex)
     }

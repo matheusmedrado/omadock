@@ -52,6 +52,22 @@ function surfaceMetrics(configuration) {
     }
 }
 
+// Dragging a pinned application clear of the strip unpins it, the way a dock
+// icon is dragged off on macOS. Only vertical distance counts: the strip is
+// horizontal and dragging past either end is how an item is moved to the front
+// or back, so treating that as "outside" would make reordering to an edge
+// unpin instead.
+//
+// The threshold keeps a slightly wobbly reorder from throwing the pin away; a
+// deliberate pull away from the strip is required.
+function dragLeavesStrip(pointerY, stripHeight, threshold) {
+    var y = Number(pointerY)
+    var height = Number(stripHeight)
+    var margin = Number(threshold)
+    if (!isFinite(y) || !isFinite(height) || !isFinite(margin) || margin < 0) return false
+    return y < -margin || y > height + margin
+}
+
 function slotLabel(slot) {
     var number = Number(slot)
     if (!isFinite(number) || number <= 0) return ""

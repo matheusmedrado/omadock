@@ -22,6 +22,13 @@ All notable changes to OmaDock are documented here.
 - `behavior.reserveSpace` now applies to every hide mode, not only `never`. A
   revealed dock takes an exclusive zone so windows move up rather than being
   covered, and gives it back once the dock has finished hiding.
+- Dragging a pinned application clear of the strip unpins it, closing the loop
+  with dragging a running one in to pin it. Only vertical distance counts:
+  dragging past either end is how an item is moved to the front or back, so
+  treating that as "outside" would turn reordering to an edge into a removal. A
+  threshold of three quarters of the row height keeps a wobbly reorder from
+  discarding the pin, and the dragged slot fades out once releasing would remove
+  it rather than move it.
 - IPC on the `omadock` target: `reveal`, `conceal`, `toggle`, `revealOn`,
   `toggleOn`, and `status`, so the dock can be bound to a key. The bare forms act
   on the focused monitor; IPC requires every declared argument, so naming a

@@ -37,6 +37,35 @@ TestCase {
         compare(metrics.surfaceHeight, 68)
     }
 
+    function test_dragLeavesStripOnlyWhenPulledClearVertically() {
+        var height = 54
+        var threshold = 30
+
+        // Inside the strip, and within the threshold either side of it.
+        compare(DockModel.dragLeavesStrip(27, height, threshold), false)
+        compare(DockModel.dragLeavesStrip(-29, height, threshold), false)
+        compare(DockModel.dragLeavesStrip(height + 29, height, threshold), false)
+
+        // Pulled clear.
+        compare(DockModel.dragLeavesStrip(-31, height, threshold), true)
+        compare(DockModel.dragLeavesStrip(height + 31, height, threshold), true)
+    }
+
+    function test_dragLeavesStripIgnoresNonsenseInput() {
+        compare(DockModel.dragLeavesStrip(NaN, 54, 30), false)
+        compare(DockModel.dragLeavesStrip(-100, NaN, 30), false)
+        compare(DockModel.dragLeavesStrip(-100, 54, NaN), false)
+        compare(DockModel.dragLeavesStrip(-100, 54, -1), false)
+    }
+
+    // A horizontal drag past either end is how an item is moved to the front or
+    // back, so it must never be mistaken for dragging the item out.
+    function test_horizontalDragNeverLeavesTheStrip() {
+        for (var y = 0; y <= 54; y += 6) {
+            compare(DockModel.dragLeavesStrip(y, 54, 30), false)
+        }
+    }
+
     function test_visualLabelsUseCompactTerminalForms() {
         compare(DockModel.slotLabel(3), "03")
         compare(DockModel.slotLabel(123), "23")

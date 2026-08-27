@@ -30,7 +30,16 @@ Item {
     readonly property int dragThreshold: 8
     readonly property int wheelNotch: 120
 
-    opacity: root.dragSource ? 0.4 : 1
+    // The source slot is a placeholder while dragging. Once the drop would
+    // unpin rather than reorder, it fades most of the way out so the gesture
+    // reads as removal before the button is released.
+    readonly property bool dragRemoving: root.dragSource && !!root.dockContent
+        && root.dockContent.dragWillRemove
+    opacity: root.dragRemoving ? 0.12 : root.dragSource ? 0.4 : 1
+
+    Behavior on opacity {
+        NumberAnimation { duration: 90; easing.type: Easing.OutCubic }
+    }
 
     readonly property var metrics: DockModel.surfaceMetrics(configuration)
     readonly property int itemHeight: metrics.itemHeight
@@ -182,7 +191,7 @@ Item {
 
             var point = root.mapToItem(root.dockContent, mouse.x, mouse.y)
             if (root.dragStarted) {
-                root.dockContent.updateDrag(point.x)
+                root.dockContent.updateDrag(point.x, point.y)
                 return
             }
 
@@ -193,14 +202,14 @@ Item {
             if (root.dockContent.beginDrag(root.itemIndex, root.itemRecord)) {
                 root.dragStarted = true
                 root.suppressClick = true
-                root.dockContent.updateDrag(point.x)
+                root.dockContent.updateDrag(point.x, point.y)
             }
         }
         onReleased: function(mouse) {
             var wasDragging = root.dragStarted
             if (wasDragging && root.dockContent) {
                 var point = root.mapToItem(root.dockContent, mouse.x, mouse.y)
-                root.dockContent.finishDrag(point.x)
+                root.dockContent.finishDrag(point.x, point.y)
             }
             root.dragStarted = false
             root.pressButton = Qt.NoButton

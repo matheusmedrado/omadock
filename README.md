@@ -75,6 +75,8 @@ default:
 - **Mouse wheel:** cycle existing windows.
 - **Right click:** open actions such as pin, unpin, or close the active window.
 - **Drag:** reorder pinned apps, or drag a running app into the pinned region.
+- **Drag out:** pull a pinned app clear of the strip to unpin it. A running
+  application stays in the dock as an unpinned entry until it exits.
 - **Edge hover:** reveal the dock when Smart Hide has tucked it away.
 
 With **Reserve space** switched on, a revealed dock pushes windows up instead of
