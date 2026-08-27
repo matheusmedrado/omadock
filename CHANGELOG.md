@@ -16,11 +16,13 @@ All notable changes to OmaDock are documented here.
 ### Changed
 
 - Redesigned the dock as a terminal command strip: one bordered surface with a
-  prompt, monochrome Nerd Font glyphs tinted to the theme, and a lowercase
-  command-style label per application, replacing the row of bordered icon tiles.
-- Application state now reads as a marker rule — an accent rule under the focused
-  application, a short dim rule under one that is merely running, and nothing
-  under a pinned application that is not running.
+  prompt, and a monochrome glyph beside a lowercase command-style label per
+  application, replacing the row of bordered icon tiles.
+- Application state is carried by brightness alone. The focused application is
+  lit in the accent colour, a running one sits at normal weight, and a pinned one
+  that is not running stays dim; hovering a dim entry lifts it. Nothing moves,
+  resizes, or gains a background between states, and the three-dot marker under a
+  running application keeps its length in every state.
 - Scroll-to-cycle accumulates wheel deltas into notches, so one touchpad flick no
   longer cycles through every window at once, and scrolling back cycles backwards.
 - Window lists sort by address so "next window" stays stable between rebuilds.
@@ -32,9 +34,7 @@ All notable changes to OmaDock are documented here.
 - The prompt and the marker rules sit on the same matrix as the glyphs, so the
   whole strip reads as one dot grid instead of mixing dots with vector strokes.
 - Added an ordered-dither (Bayer) texture that gathers along the bottom edge of
-  the strip, with hover and press drawn as a dithered wash rather than a flat
-  translucent fill. `appearance.showDither` and `appearance.ditherCell` control
-  it.
+  the strip. `appearance.showDither` and `appearance.ditherCell` control it.
 - The strip is taller and roomier: a 28px glyph in a 40px row, up from 16 and 28.
 - The surface is opaque by default. At the previous 0.94 the window behind
   showed through clearly enough to read.

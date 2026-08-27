@@ -1,20 +1,22 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 553 114" width="1659" height="342"
      role="img" aria-label="OmaDock: a dithered terminal command strip with dot-matrix application glyphs">
   <title>OmaDock</title>
-  <desc>The dock is a single command strip. A dot-matrix prompt opens the line,
-  each application is a dot-matrix glyph beside a lowercase command label, and an
-  ordered-dither texture gathers along the bottom edge. A run of accent dots marks
-  the focused application, three dim dots mark one merely running, and a pinned
-  application that is not running stays dim with no marker.</desc>
+  <desc>The dock is a single command strip. A dot-matrix prompt opens the line and
+  each application is a dot-matrix glyph beside a lowercase command label, over an
+  ordered-dither texture that gathers along the bottom edge. State is carried by
+  brightness alone: the focused application is lit in the accent colour, a running
+  one sits at normal weight, and a pinned one that is not running stays dim.
+  Nothing moves or resizes between states.</desc>
 
   <style>
     .surface { fill: #101315; }
     .border  { fill: none; stroke: #cacccc; stroke-opacity: 0.4; stroke-width: 1; }
     .dot     { fill: #cacccc; }
     .accent  { fill: #7aa88a; }
+    .faint   { fill-opacity: 0.35; }
     .dither  { fill: #cacccc; fill-opacity: 0.09; }
     .label   { fill: #cacccc; font-family: "JetBrains Mono", "DejaVu Sans Mono", monospace; font-size: 12px; }
-    .dim     { fill-opacity: 0.45; }
+    .dim     { fill-opacity: 0.4; }
     .caption { fill: #707880; font-family: "JetBrains Mono", "DejaVu Sans Mono", monospace; font-size: 7.5px; }
     .leader  { stroke: #707880; stroke-width: 0.5; stroke-opacity: 0.7; fill: none; }
   </style>
@@ -450,35 +452,35 @@
     </g>
 
     <g>
-      <circle class="dot" cx="53" cy="12" r="1.5"/>
-      <circle class="dot" cx="57" cy="12" r="1.5"/>
-      <circle class="dot" cx="61" cy="12" r="1.5"/>
-      <circle class="dot" cx="65" cy="12" r="1.5"/>
-      <circle class="dot" cx="69" cy="12" r="1.5"/>
-      <circle class="dot" cx="49" cy="16" r="1.5"/>
-      <circle class="dot" cx="73" cy="16" r="1.5"/>
-      <circle class="dot" cx="49" cy="20" r="1.5"/>
-      <circle class="dot" cx="57" cy="20" r="1.5"/>
-      <circle class="dot" cx="73" cy="20" r="1.5"/>
-      <circle class="dot" cx="49" cy="24" r="1.5"/>
-      <circle class="dot" cx="61" cy="24" r="1.5"/>
-      <circle class="dot" cx="73" cy="24" r="1.5"/>
-      <circle class="dot" cx="49" cy="28" r="1.5"/>
-      <circle class="dot" cx="57" cy="28" r="1.5"/>
-      <circle class="dot" cx="73" cy="28" r="1.5"/>
-      <circle class="dot" cx="49" cy="32" r="1.5"/>
-      <circle class="dot" cx="73" cy="32" r="1.5"/>
-      <circle class="dot" cx="53" cy="36" r="1.5"/>
-      <circle class="dot" cx="57" cy="36" r="1.5"/>
-      <circle class="dot" cx="61" cy="36" r="1.5"/>
-      <circle class="dot" cx="65" cy="36" r="1.5"/>
-      <circle class="dot" cx="69" cy="36" r="1.5"/>
-      <text class="label" x="82" y="28.32">ghostty</text>
+      <circle class="dot accent" cx="53" cy="12" r="1.5"/>
+      <circle class="dot accent" cx="57" cy="12" r="1.5"/>
+      <circle class="dot accent" cx="61" cy="12" r="1.5"/>
+      <circle class="dot accent" cx="65" cy="12" r="1.5"/>
+      <circle class="dot accent" cx="69" cy="12" r="1.5"/>
+      <circle class="dot accent" cx="49" cy="16" r="1.5"/>
+      <circle class="dot accent" cx="73" cy="16" r="1.5"/>
+      <circle class="dot accent" cx="49" cy="20" r="1.5"/>
+      <circle class="dot accent" cx="57" cy="20" r="1.5"/>
+      <circle class="dot accent" cx="73" cy="20" r="1.5"/>
+      <circle class="dot accent" cx="49" cy="24" r="1.5"/>
+      <circle class="dot accent" cx="61" cy="24" r="1.5"/>
+      <circle class="dot accent" cx="73" cy="24" r="1.5"/>
+      <circle class="dot accent" cx="49" cy="28" r="1.5"/>
+      <circle class="dot accent" cx="57" cy="28" r="1.5"/>
+      <circle class="dot accent" cx="73" cy="28" r="1.5"/>
+      <circle class="dot accent" cx="49" cy="32" r="1.5"/>
+      <circle class="dot accent" cx="73" cy="32" r="1.5"/>
+      <circle class="dot accent" cx="53" cy="36" r="1.5"/>
+      <circle class="dot accent" cx="57" cy="36" r="1.5"/>
+      <circle class="dot accent" cx="61" cy="36" r="1.5"/>
+      <circle class="dot accent" cx="65" cy="36" r="1.5"/>
+      <circle class="dot accent" cx="69" cy="36" r="1.5"/>
+      <text class="label accent" x="82" y="28.32">ghostty</text>
     </g>
     <g>
-      <circle class="dot" cx="57" cy="43" r="1.5"/>
-      <circle class="dot" cx="61" cy="43" r="1.5"/>
-      <circle class="dot" cx="65" cy="43" r="1.5"/>
+      <circle class="dot accent" cx="57" cy="43" r="1.5"/>
+      <circle class="dot accent" cx="61" cy="43" r="1.5"/>
+      <circle class="dot accent" cx="65" cy="43" r="1.5"/>
     </g>
     <g>
       <circle class="dot" cx="158.4" cy="12" r="1.5"/>
@@ -501,34 +503,9 @@
       <text class="label" x="183.4" y="28.32">zen-browser</text>
     </g>
     <g>
-      <circle class="dot accent" cx="150.4" cy="43" r="1.5"/>
-      <circle class="dot accent" cx="154.4" cy="43" r="1.5"/>
-      <circle class="dot accent" cx="158.4" cy="43" r="1.5"/>
-      <circle class="dot accent" cx="162.4" cy="43" r="1.5"/>
-      <circle class="dot accent" cx="166.4" cy="43" r="1.5"/>
-      <circle class="dot accent" cx="170.4" cy="43" r="1.5"/>
-      <circle class="dot accent" cx="174.4" cy="43" r="1.5"/>
-      <circle class="dot accent" cx="178.4" cy="43" r="1.5"/>
-      <circle class="dot accent" cx="182.4" cy="43" r="1.5"/>
-      <circle class="dot accent" cx="186.4" cy="43" r="1.5"/>
-      <circle class="dot accent" cx="190.4" cy="43" r="1.5"/>
-      <circle class="dot accent" cx="194.4" cy="43" r="1.5"/>
-      <circle class="dot accent" cx="198.4" cy="43" r="1.5"/>
-      <circle class="dot accent" cx="202.4" cy="43" r="1.5"/>
-      <circle class="dot accent" cx="206.4" cy="43" r="1.5"/>
-      <circle class="dot accent" cx="210.4" cy="43" r="1.5"/>
-      <circle class="dot accent" cx="214.4" cy="43" r="1.5"/>
-      <circle class="dot accent" cx="218.4" cy="43" r="1.5"/>
-      <circle class="dot accent" cx="222.4" cy="43" r="1.5"/>
-      <circle class="dot accent" cx="226.4" cy="43" r="1.5"/>
-      <circle class="dot accent" cx="230.4" cy="43" r="1.5"/>
-      <circle class="dot accent" cx="234.4" cy="43" r="1.5"/>
-      <circle class="dot accent" cx="238.4" cy="43" r="1.5"/>
-      <circle class="dot accent" cx="242.4" cy="43" r="1.5"/>
-      <circle class="dot accent" cx="246.4" cy="43" r="1.5"/>
-      <circle class="dot accent" cx="250.4" cy="43" r="1.5"/>
-      <circle class="dot accent" cx="254.4" cy="43" r="1.5"/>
-      <circle class="dot accent" cx="258.4" cy="43" r="1.5"/>
+      <circle class="dot faint" cx="158.4" cy="43" r="1.5"/>
+      <circle class="dot faint" cx="162.4" cy="43" r="1.5"/>
+      <circle class="dot faint" cx="166.4" cy="43" r="1.5"/>
     </g>
     <g>
       <circle class="dot dim" cx="280.6" cy="16" r="1.5"/>
@@ -558,10 +535,10 @@
 
   <g>
     <path class="leader" d="M184.7 68 V86 H138.7"/>
-    <text class="caption" x="135.7" y="88.5" text-anchor="end">running</text>
+    <text class="caption" x="135.7" y="88.5" text-anchor="end">focused</text>
 
     <path class="leader" d="M300.5 68 V100 H254.5"/>
-    <text class="caption" x="251.5" y="102.5" text-anchor="end">focused</text>
+    <text class="caption" x="251.5" y="102.5" text-anchor="end">running</text>
 
     <path class="leader" d="M409.1 68 V86 H443.1"/>
     <text class="caption" x="446.1" y="88.5">pinned, not running</text>

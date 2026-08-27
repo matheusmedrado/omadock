@@ -36,13 +36,10 @@ Item {
     readonly property int itemHeight: metrics.itemHeight
     readonly property int glyphSize: metrics.glyphSize
     readonly property int itemPadding: metrics.itemPadding
-    readonly property int ditherCell: metrics.ditherCell
     // The marker sits on the glyph pitch so its dots line up with the matrix
-    // above them. A focused application spans its own width; a running one is a
-    // fixed short run.
+    // above them.
     readonly property int markerPitch: Math.max(2, Math.floor(metrics.glyphSize / 7))
-    readonly property int markerDots: root.localActive
-        ? Math.max(3, Math.floor(itemRow.implicitWidth / markerPitch)) : 3
+    readonly property int markerDots: 3
     readonly property bool localActive: hasLocalActiveWindow()
     readonly property bool running: !!root.itemRecord.running
     readonly property bool urgent: !!root.itemRecord.urgent
@@ -58,15 +55,20 @@ Item {
     readonly property bool labelVisible: root.showLabels === "always"
         || (root.showLabels === "hover" && root.hovered)
 
-    // Running is carried by the label's weight and the marker rule underneath;
-    // a pinned app that is not running stays dim so the strip reads like a
-    // command history where only live entries are lit.
-    readonly property color itemColor: {
+    // Every state is carried by brightness alone: nothing moves, resizes, or
+    // gains a background. A pinned application that is not running sits dim so
+    // the strip reads like a command history where only live entries are lit,
+    // and hovering one lifts it towards the running ones. Not readonly, because
+    // Behavior needs to intercept the binding's writes to ease them.
+    property color itemColor: {
         if (root.urgent) return Color.urgent
-        if (root.localActive) return Color.accent
-        if (root.pressed) return Color.accent
+        if (root.localActive || root.pressed) return Color.accent
         if (root.running) return Color.bar.text
-        return Util.alpha(Color.bar.text, root.hovered ? 0.85 : 0.45)
+        return Util.alpha(Color.bar.text, root.hovered ? 0.9 : 0.4)
+    }
+
+    Behavior on itemColor {
+        ColorAnimation { duration: 120; easing.type: Easing.OutCubic }
     }
 
     function hasLocalActiveWindow() {
@@ -85,25 +87,6 @@ Item {
     implicitHeight: itemHeight
     width: implicitWidth
     height: implicitHeight
-
-    // Hover and press read as a dithered wash rising from the bottom of the
-    // item rather than a flat translucent fill, so the interaction states share
-    // the strip's texture instead of introducing a second visual language.
-    Item {
-        anchors.fill: parent
-        clip: true
-        visible: root.hovered || root.pressed || root.contextMenuOpen
-
-        DitherPattern {
-            anchors.fill: parent
-            cell: root.ditherCell
-            tint: root.pressed ? Color.accent : Color.bar.text
-            topCoverage: root.pressed ? 0.35 : 0.10
-            bottomCoverage: root.pressed ? 0.95 : 0.55
-            gamma: 1.4
-            opacity: root.pressed ? 0.5 : 0.35
-        }
-    }
 
     Row {
         id: itemRow
@@ -147,9 +130,9 @@ Item {
         }
     }
 
-    // Marker rule, drawn on the same matrix as the glyphs: a run of accent dots
-    // spanning the focused application, three dim dots under one that is merely
-    // running, nothing under a pinned application that is not.
+    // Marker rule, on the same matrix as the glyphs. The run stays the same
+    // length in every state and only its brightness changes, so focus reads as
+    // the row lighting up rather than as the marker growing.
     DotMatrix {
         id: marker
         visible: root.running
@@ -162,7 +145,11 @@ Item {
         cells: PixelGlyphs.ruleCells(root.markerDots)
         tint: root.urgent ? Color.urgent
             : root.localActive ? Color.accent
-            : Util.alpha(Color.bar.text, 0.6)
+            : Util.alpha(Color.bar.text, 0.35)
+
+        Behavior on tint {
+            ColorAnimation { duration: 120; easing.type: Easing.OutCubic }
+        }
     }
 
     MouseArea {
