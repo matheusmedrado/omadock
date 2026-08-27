@@ -102,6 +102,29 @@ validation, so a change made there is identical to one typed by hand and applies
 to the running dock immediately. Pinned applications stay where they belong: on
 the dock itself, via right click and drag.
 
+## Keybindings
+
+The dock answers to `omarchy-shell`, so it can be reached without the pointer:
+
+```bash
+omarchy-shell omadock toggle            # focused monitor
+omarchy-shell omadock reveal
+omarchy-shell omadock conceal
+omarchy-shell omadock toggleOn DP-1     # a named monitor
+omarchy-shell omadock status            # state, per monitor, as JSON
+```
+
+A reveal is a latch rather than a hover: it holds the dock open over whatever
+Smart Hide would otherwise do, until something conceals it. Bind it in
+`~/.config/hypr/bindings.conf`:
+
+```conf
+bindd = SUPER, D, Toggle the dock, exec, omarchy-shell omadock toggle
+```
+
+The preferences panel answers on its own target, `omadock-settings`, with
+`open`, `close`, and `toggle`.
+
 ## Configuration
 
 Everything in the panel, and a few settings beyond it, live outside the plugin

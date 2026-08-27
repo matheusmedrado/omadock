@@ -22,6 +22,11 @@ All notable changes to OmaDock are documented here.
 - `behavior.reserveSpace` now applies to every hide mode, not only `never`. A
   revealed dock takes an exclusive zone so windows move up rather than being
   covered, and gives it back once the dock has finished hiding.
+- IPC on the `omadock` target: `reveal`, `conceal`, `toggle`, `revealOn`,
+  `toggleOn`, and `status`, so the dock can be bound to a key. The bare forms act
+  on the focused monitor; IPC requires every declared argument, so naming a
+  monitor is a separate call rather than an optional one. The preferences panel
+  moved to `omadock-settings` to leave the short target to the dock.
 - `scripts/check` now validates every declared entry point rather than only the
   overlay.
 

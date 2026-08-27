@@ -15,7 +15,7 @@ Panel {
     id: root
 
     moduleName: "io.github.matheusmedrado.omadock"
-    ipcTarget: "omadock"
+    ipcTarget: "omadock-settings"
 
     property var shell
     property var manifest

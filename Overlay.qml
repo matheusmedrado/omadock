@@ -1,6 +1,7 @@
 import QtQuick
 import Quickshell
 import Quickshell.Hyprland
+import Quickshell.Io
 import "components"
 import "services"
 
@@ -16,6 +17,48 @@ Item {
     property var dockInstances: []
     property alias dockConfigService: configServiceObject
     property alias dockAppService: appService
+
+    // Bind these to a key to reach the dock without the pointer. A reveal is a
+    // latch, not a hover: it holds the dock open on top of whatever Smart Hide
+    // would otherwise do, until something conceals it again.
+    //
+    // IPC requires every declared argument, so the monitor cannot simply be
+    // optional -- `reveal` would refuse a bare call. The bare forms act on the
+    // focused monitor and the `-On` forms name one, which keeps a keybinding to
+    // a single word. Calls are forwarded to root explicitly; an unqualified
+    // `toggle()` here would resolve to this handler's own function and recurse.
+    IpcHandler {
+        target: "omadock"
+
+        function reveal(): string {
+            root.open("")
+            return "ok"
+        }
+
+        function revealOn(monitor: string): string {
+            root.open(monitor)
+            return "ok"
+        }
+
+        function conceal(): string {
+            root.close()
+            return "ok"
+        }
+
+        function toggle(): string {
+            root.toggle("")
+            return "ok"
+        }
+
+        function toggleOn(monitor: string): string {
+            root.toggle(monitor)
+            return "ok"
+        }
+
+        function status(): string {
+            return root.status()
+        }
+    }
 
     ConfigService {
         id: configServiceObject
