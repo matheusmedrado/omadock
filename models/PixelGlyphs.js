@@ -151,6 +151,16 @@ var GLYPHS = {
         "1000001",
         "1111111"
     ],
+    // The dock itself: a strip with three lit slots. Used by the bar widget.
+    dock: [
+        "0000000",
+        "0000000",
+        "1111111",
+        "1000001",
+        "1010101",
+        "1111111",
+        "0000000"
+    ],
     // The shell prompt that opens the strip.
     prompt: [
         "0000000",

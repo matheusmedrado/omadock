@@ -18,6 +18,7 @@ to remember.
 - Pinned applications and running, unpinned applications.
 - Launch, focus, multi-window cycling, and safe context-menu actions.
 - Drag reorder for pinned apps, including pinning eligible running apps.
+- A bar widget with a preferences panel for hiding, layout, and pointer actions.
 - Live Omarchy theme integration.
 - A JSON configuration file that survives updates and removal.
 - No daemon, polling loop, telemetry, network requests, or extra runtime.
@@ -77,9 +78,28 @@ change; OmaDock does not move the pointer for you.
 The dock suspends itself on fullscreen workspaces by default, because games and
 videos deserve the whole screen—and all the pixels they can get.
 
+## Preferences
+
+OmaDock ships a bar widget. Its icon is the dock's own dot-matrix glyph; click it
+to open a preferences panel covering hiding, layout, glyphs, and pointer actions.
+Middle-clicking the icon toggles between Smart Hide and never hiding, which is
+the setting worth reaching for without opening anything.
+
+Add it to the bar from the Omarchy plugin UI, or from a terminal:
+
+```bash
+omarchy-shell shell putBarWidget io.github.matheusmedrado.omadock '{"section":"right"}'
+```
+
+The panel writes to the same `config.json` described below, through the same
+validation, so a change made there is identical to one typed by hand and applies
+to the running dock immediately. Pinned applications stay where they belong: on
+the dock itself, via right click and drag.
+
 ## Configuration
 
-User settings live outside the plugin checkout:
+Everything in the panel, and a few settings beyond it, live outside the plugin
+checkout:
 
 ```text
 ~/.config/omadock/config.json
@@ -101,6 +121,10 @@ A minimal configuration looks like this:
 The configuration also supports monitor selection, compact or comfortable
 density, appearance, hide behavior, and click actions. Changes are applied
 live when valid; invalid edits keep the last known-good configuration.
+
+Settings the panel does not surface, because they are set once and forgotten:
+`monitorMode` and `monitors`, `aliases` for applications whose window class does
+not match their desktop entry, and the reveal, hide, and animation timings.
 
 Removing OmaDock preserves the configuration file by default.
 

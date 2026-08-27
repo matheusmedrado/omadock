@@ -12,6 +12,15 @@ All notable changes to OmaDock are documented here.
 - Pinned and running application items with launch, focus, and cycling actions.
 - Safe context-menu actions and drag reorder with persistent configuration.
 - Omarchy theme-driven command-strip visuals with status markers and counts.
+- A bar widget carrying the dock's dot-matrix glyph. Clicking it opens a
+  preferences panel for hiding, layout, glyphs, and pointer actions; middle
+  clicking toggles Smart Hide against never hiding. The panel writes through the
+  same ConfigService the dock uses, so a change made there takes the same
+  validation and atomic write as one typed into `config.json`, and the running
+  dock applies it from its own file watcher without a restart. Pinned
+  applications are still managed on the dock itself.
+- `scripts/check` now validates every declared entry point rather than only the
+  overlay.
 
 ### Changed
 

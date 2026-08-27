@@ -6,9 +6,20 @@
   "author": "matheusmedrado",
   "license": "MIT",
   "description": "A fast, terminal-inspired application dock for Omarchy Quattro.",
-  "kinds": ["overlay"],
+  "kinds": [
+    "overlay",
+    "bar-widget"
+  ],
   "keepLoaded": true,
   "entryPoints": {
-    "overlay": "Overlay.qml"
+    "overlay": "Overlay.qml",
+    "barWidget": "BarPanel.qml"
+  },
+  "barWidget": {
+    "displayName": "OmaDock",
+    "description": "Dock preferences: hiding, layout, glyphs, and pointer actions.",
+    "category": "System",
+    "allowMultiple": false,
+    "defaultSection": "right"
   }
 }

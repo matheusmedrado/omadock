@@ -110,6 +110,26 @@ Item {
         return true
     }
 
+    // Single entry point for editors such as the bar widget. Writing through
+    // save() means a value set from the GUI takes the same validation, clamping,
+    // and atomic write as one typed into config.json by hand.
+    function setSectionValue(section, key, value) {
+        var next = ConfigModel.clone(settings)
+        if (!next[section] || typeof next[section] !== "object" || Array.isArray(next[section])) {
+            next[section] = {}
+        }
+        if (next[section][key] === value) return true
+        next[section][key] = value
+        return save(next)
+    }
+
+    function setValue(key, value) {
+        var next = ConfigModel.clone(settings)
+        if (next[key] === value) return true
+        next[key] = value
+        return save(next)
+    }
+
     function pin(desktopId) {
         return pinAt(desktopId, Array.isArray(settings.pinned) ? settings.pinned.length : 0)
     }

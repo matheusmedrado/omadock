@@ -46,15 +46,19 @@ jq -e '
     and (.entryPoints | type == "object")
     and ((.kinds | index("overlay")) == null or
          (.entryPoints.overlay | type == "string" and length > 0))
+    and ((.kinds | index("bar-widget")) == null or
+         (.entryPoints.barWidget | type == "string" and length > 0))
 ' manifest.json >/dev/null || fail "manifest contract is invalid"
 
-overlay_entry=$(jq -er '.entryPoints.overlay' manifest.json) || fail "overlay entry point is missing"
-case "$overlay_entry" in
-    /*|../*|*/../*|..)
-        fail "overlay entry point must be a safe relative path"
-        ;;
-esac
-[ -f "$overlay_entry" ] || fail "overlay entry point does not exist: $overlay_entry"
+# Every declared entry point must be a safe relative path that actually exists.
+while IFS= read -r entry_point; do
+    case "$entry_point" in
+        /*|../*|*/../*|..)
+            fail "entry point must be a safe relative path: $entry_point"
+            ;;
+    esac
+    [ -f "$entry_point" ] || fail "entry point does not exist: $entry_point"
+done < <(jq -er '.entryPoints | to_entries[] | .value' manifest.json)
 
 find . -path './.git' -prune -o -type l -print -quit | grep -q . \
     && fail "symlinks are not allowed in the plugin tree"
@@ -98,7 +102,7 @@ if [ -z "$qmllint_bin" ] && [ -x /usr/lib/qt6/bin/qmllint ]; then
 fi
 
 if [ -n "$qmllint_bin" ]; then
-    qml_files=(Overlay.qml components/*.qml services/*.qml tests/*.qml)
+    qml_files=(Overlay.qml BarPanel.qml components/*.qml services/*.qml tests/*.qml)
     if [ -n "${OMARCHY_PATH:-}" ]; then
         "$qmllint_bin" -I "$OMARCHY_PATH/shell" "${qml_files[@]}"
     else
