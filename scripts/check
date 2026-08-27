@@ -101,16 +101,17 @@ if [ -z "$qmllint_bin" ] && [ -x /usr/lib/qt6/bin/qmllint ]; then
     qmllint_bin=/usr/lib/qt6/bin/qmllint
 fi
 
-if [ -n "$qmllint_bin" ]; then
-    qml_files=(Overlay.qml BarPanel.qml components/*.qml services/*.qml tests/*.qml)
-    if [ -n "${OMARCHY_PATH:-}" ]; then
-        "$qmllint_bin" -I "$OMARCHY_PATH/shell" "${qml_files[@]}"
-    else
-        printf 'OmaDock check: OMARCHY_PATH is not set; running qmllint without shell imports\n'
-        "$qmllint_bin" "${qml_files[@]}"
-    fi
-else
+# Almost every type this plugin uses comes from Quickshell or the Omarchy shell.
+# Without OMARCHY_PATH to resolve them, qmllint reports each one as an error and
+# says nothing about the code, so it is skipped rather than run blind. That is
+# why CI installs Qt for the test runner but does not lint.
+if [ -z "$qmllint_bin" ]; then
     printf 'OmaDock check: qmllint not found; skipping QML lint\n'
+elif [ -z "${OMARCHY_PATH:-}" ]; then
+    printf 'OmaDock check: OMARCHY_PATH is not set; skipping QML lint\n'
+else
+    qml_files=(Overlay.qml BarPanel.qml components/*.qml services/*.qml tests/*.qml)
+    "$qmllint_bin" -I "$OMARCHY_PATH/shell" "${qml_files[@]}"
 fi
 
 qmltestrunner_bin=$(command -v qmltestrunner || true)
