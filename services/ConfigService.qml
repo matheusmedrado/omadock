@@ -11,6 +11,7 @@ Item {
     property bool ready: false
     property bool writing: false
     property bool directoryReady: false
+    property bool seeded: false
     property var pendingText: null
 
     readonly property string configRoot: {
@@ -41,8 +42,13 @@ Item {
     function acceptText(text) {
         var parsed
         if (!text || text.trim() === "") {
-            applyConfiguration(ConfigModel.defaultConfig(), {})
-            persist(settings, rawSettings)
+            // The watcher sees the file mid-write: shell redirection and most
+            // editors truncate before writing, so an empty read is normally a
+            // half-finished save rather than an empty configuration. Writing
+            // defaults back here would overwrite whatever the user was in the
+            // middle of saving, so re-read instead and keep what we have.
+            if (!root.ready) applyConfiguration(ConfigModel.defaultConfig(), {})
+            rereadTimer.restart()
             return
         }
 
@@ -155,7 +161,17 @@ Item {
             root.acceptText(text())
         }
 
-        onLoadFailed: root.ensureDirectory()
+        // A load failure on a fresh install means there is no config.json yet.
+        // Seed one so the available settings are discoverable, but only once and
+        // only while nothing has ever loaded, so a transient read failure cannot
+        // overwrite an existing configuration.
+        onLoadFailed: {
+            root.ensureDirectory()
+            if (root.ready || root.seeded) return
+            root.seeded = true
+            root.applyConfiguration(ConfigModel.defaultConfig(), {})
+            root.persist(root.settings, root.rawSettings)
+        }
 
         onFileChanged: {
             if (!root.writing) fileView.reload()
@@ -169,6 +185,14 @@ Item {
             root.writing = false
             root.reportError("could not write config.json; keeping settings in memory")
         }
+    }
+
+    // Re-read after an empty or mid-write read settles.
+    Timer {
+        id: rereadTimer
+        interval: 120
+        repeat: false
+        onTriggered: fileView.reload()
     }
 
     Process {

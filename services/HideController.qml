@@ -125,6 +125,13 @@ Item {
                 && next.generation === root.visibilityState.generation) return
         root.visibilityState = next
         root.applyState(next)
+
+        // Entering a state can already satisfy the condition for leaving it —
+        // a window that starts overlapping while the dock is still revealing
+        // leaves SHOWN owing a hide that no further input change would trigger.
+        // Re-evaluating settles that; dispatch is a no-op once the machine is
+        // stable, so this terminates.
+        root.scheduleEvaluate()
     }
 
     function applyState(next) {

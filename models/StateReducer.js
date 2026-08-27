@@ -7,8 +7,13 @@ function initialState() {
     }
 }
 
+// The dock sits one edge margin above the screen edge, so a pointer resting on
+// the reveal sensor is never over the dock itself. Without treating the edge as
+// a hold, a dock revealed from the edge hides again as soon as the hide delay
+// expires and then re-reveals, flickering under a stationary pointer.
 function heldOpen(input) {
-    return !!(input.dockHovered || input.dragActive || input.menuOpen || input.forcedReveal)
+    return !!(input.dockHovered || input.edgeHovered || input.dragActive
+        || input.menuOpen || input.forcedReveal)
 }
 
 function nextState(current, name) {

@@ -49,6 +49,17 @@ TestCase {
         compare(transition(pending, { edgeHovered: false }).name, "HIDDEN")
     }
 
+    function test_edgeHoverHoldsARevealedDockOpen() {
+        var shown = { name: "SHOWN", generation: 4 }
+        var held = transition(shown, { windowConflict: true, edgeHovered: true })
+        compare(held.name, "SHOWN")
+        compare(held.generation, 4)
+
+        var pendingHide = transition(shown, { windowConflict: true })
+        compare(pendingHide.name, "HIDE_PENDING")
+        compare(transition(pendingHide, { windowConflict: true, edgeHovered: true }).name, "SHOWN")
+    }
+
     function test_revealAndHideAnimationsComplete() {
         var state = transition(StateReducer.initialState(), {})
         compare(state.name, "REVEALING")

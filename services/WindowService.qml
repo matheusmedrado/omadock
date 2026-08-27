@@ -8,6 +8,8 @@ Item {
     property var records: []
     property int refreshDelayMs: 35
     property int ipcSettleMs: 25
+    property int settleRetries: 0
+    readonly property int maxSettleRetries: 4
     signal workspaceTransition()
 
     function modelValues(model) {
@@ -18,13 +20,24 @@ Item {
         return typeof value === "number" && isFinite(value) ? value : null
     }
 
+    // Hyprland's `at` and `size` arrive as QVariantList, which Array.isArray
+    // rejects even though the values are indexable. Test for length instead so
+    // real geometry is not discarded.
+    function pairFromIpc(value) {
+        if (!value || typeof value !== "object") return null
+        if (Number(value.length) < 2) return null
+        return value
+    }
+
     function rectangleFromIpc(ipc) {
-        if (!ipc || !Array.isArray(ipc.at) || !Array.isArray(ipc.size)) return null
-        if (ipc.at.length < 2 || ipc.size.length < 2) return null
-        var x = numberOrNull(ipc.at[0])
-        var y = numberOrNull(ipc.at[1])
-        var width = numberOrNull(ipc.size[0])
-        var height = numberOrNull(ipc.size[1])
+        if (!ipc) return null
+        var at = pairFromIpc(ipc.at)
+        var size = pairFromIpc(ipc.size)
+        if (!at || !size) return null
+        var x = numberOrNull(at[0])
+        var y = numberOrNull(at[1])
+        var width = numberOrNull(size[0])
+        var height = numberOrNull(size[1])
         if (x === null || y === null || width === null || height === null) return null
         if (width < 0 || height < 0) return null
         return { x: x, y: y, width: width, height: height }
@@ -43,14 +56,38 @@ Item {
         return !title || !ipcTitle || title === ipcTitle
     }
 
+    function hasIpcPayload(hyprToplevel) {
+        var ipc = hyprToplevel && hyprToplevel.lastIpcObject
+        return !!ipc && ipc.address !== undefined
+    }
+
+    // The `HyprlandToplevel` attached handle names the right window but is not
+    // the entry Hyprland.toplevels populates: its workspace, monitor, and
+    // lastIpcObject stay null even after refreshToplevels(). Take the address
+    // from it and resolve the populated entry, or every record loses the
+    // workspace and geometry that Smart Hide compares against.
+    function hyprByAddress(address, hyprToplevels, usedIndexes) {
+        if (!address) return null
+        for (var index = 0; index < hyprToplevels.length; index += 1) {
+            if (usedIndexes.indexOf(index) >= 0) continue
+            if (String(hyprToplevels[index].address || "") !== address) continue
+            if (!root.hasIpcPayload(hyprToplevels[index])) continue
+            usedIndexes.push(index)
+            return hyprToplevels[index]
+        }
+        return null
+    }
+
     function hyprFor(toplevel, hyprToplevels, usedIndexes) {
         var attached = toplevel && toplevel.HyprlandToplevel
-        if (attached) return attached
+        var attachedAddress = attached && attached.address ? String(attached.address) : ""
+        var byAddress = hyprByAddress(attachedAddress, hyprToplevels, usedIndexes)
+        if (byAddress) return byAddress
 
         for (var index = 0; index < hyprToplevels.length; index += 1) {
             if (usedIndexes.indexOf(index) >= 0) continue
             if (hyprToplevels[index].wayland === toplevel
-                    && hyprToplevels[index].lastIpcObject !== undefined) {
+                    && root.hasIpcPayload(hyprToplevels[index])) {
                 usedIndexes.push(index)
                 return hyprToplevels[index]
             }
@@ -79,7 +116,7 @@ Item {
                 return hyprToplevels[appIndex]
             }
         }
-        return null
+        return attached || null
     }
 
     function workspaceId(workspace) {
@@ -92,8 +129,9 @@ Item {
 
     function screenNames(screens) {
         var names = []
-        if (!Array.isArray(screens)) return names
-        for (var index = 0; index < screens.length; index += 1) {
+        var count = screens && typeof screens === "object" ? Number(screens.length) : 0
+        if (!isFinite(count)) return names
+        for (var index = 0; index < count; index += 1) {
             if (screens[index] && screens[index].name) names.push(String(screens[index].name))
         }
         return names
@@ -101,7 +139,7 @@ Item {
 
     function normalizedRecord(toplevel, hyprToplevel, index) {
         var ipc = hyprToplevel ? hyprToplevel.lastIpcObject : null
-        var screens = Array.isArray(toplevel.screens) ? toplevel.screens : []
+        var screens = toplevel.screens
         var monitor = hyprToplevel ? hyprToplevel.monitor : null
         var workspace = hyprToplevel ? hyprToplevel.workspace : null
         var geometry = rectangleFromIpc(ipc)
@@ -145,9 +183,28 @@ Item {
             ))
         }
         records = nextRecords
+
+        // refreshToplevels() answers asynchronously, so the settle delay can
+        // land before Hyprland has filled in geometry. A record without a
+        // workspace would read as "no conflict" and wrongly reveal the dock,
+        // so retry a bounded number of times until the payload arrives.
+        if (root.missingIpcPayload(nextRecords) && root.settleRetries < root.maxSettleRetries) {
+            root.settleRetries += 1
+            refreshTimer.restart()
+            return
+        }
+        root.settleRetries = 0
+    }
+
+    function missingIpcPayload(candidateRecords) {
+        for (var index = 0; index < candidateRecords.length; index += 1) {
+            if (candidateRecords[index].workspaceId === null) return true
+        }
+        return false
     }
 
     function scheduleRefresh() {
+        root.settleRetries = 0
         refreshTimer.restart()
     }
 
@@ -175,6 +232,26 @@ Item {
         return name.indexOf("workspace") === 0
             || name.indexOf("moveworkspace") === 0
             || name.indexOf("focusedmon") === 0
+    }
+
+    function runtimeStatus() {
+        var hyprToplevels = modelValues(Hyprland.toplevels)
+        var hypr = []
+        for (var index = 0; index < hyprToplevels.length; index += 1) {
+            var candidate = hyprToplevels[index]
+            var ipc = candidate && candidate.lastIpcObject
+            hypr.push({
+                appId: candidate && candidate.wayland ? candidate.wayland.appId : "",
+                title: candidate && candidate.wayland ? candidate.wayland.title : "",
+                address: candidate ? candidate.address : "",
+                ipc: ipc || null
+            })
+        }
+        return {
+            toplevelCount: modelValues(ToplevelManager.toplevels).length,
+            hyprToplevelCount: hypr.length,
+            hyprToplevels: hypr
+        }
     }
 
     Timer {
