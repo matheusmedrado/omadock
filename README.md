@@ -72,6 +72,12 @@ default:
 - **Drag:** reorder pinned apps, or drag a running app into the pinned region.
 - **Edge hover:** reveal the dock when Smart Hide has tucked it away.
 
+With **Reserve space** switched on, a revealed dock pushes windows up instead of
+covering them, and they flow back the moment it hides. Under Smart Hide that
+makes any tiled window count as a reason to hide, because releasing the space is
+exactly what would put a window back under the dock; floating windows are exempt,
+since an exclusive zone never moves them.
+
 Activating a window on another workspace lets Hyprland handle the workspace
 change; OmaDock does not move the pointer for you.
 

@@ -265,8 +265,7 @@ function normalizeConfig(raw, defaults) {
     var behavior = isObject(raw.behavior) ? raw.behavior : {}
     if (has(raw, "behavior") && !isObject(raw.behavior)) warning(warnings, "behavior", "was reset to its defaults")
     value.behavior.hideMode = enumValue(behavior, "hideMode", ["smart", "always", "never"], fallback.behavior.hideMode, warnings, "behavior")
-    value.behavior.reserveSpace = value.behavior.hideMode === "never"
-        && boolValue(behavior, "reserveSpace", fallback.behavior.reserveSpace, warnings, "behavior")
+    value.behavior.reserveSpace = boolValue(behavior, "reserveSpace", fallback.behavior.reserveSpace, warnings, "behavior")
     value.behavior.revealDelayMs = intValue(behavior, "revealDelayMs", fallback.behavior.revealDelayMs, 0, 1000, warnings, "behavior")
     value.behavior.hideDelayMs = intValue(behavior, "hideDelayMs", fallback.behavior.hideDelayMs, 0, 2000, warnings, "behavior")
     value.behavior.animationMs = intValue(behavior, "animationMs", fallback.behavior.animationMs, 0, 500, warnings, "behavior")

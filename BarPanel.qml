@@ -302,10 +302,10 @@ Panel {
 
                     SwitchRow {
                         label: "Reserve space"
-                        description: "Keep windows clear of the dock. Only applies when it never hides."
+                        description: root.behaviorValue("hideMode", "smart") === "never"
+                            ? "Keep windows clear of the dock."
+                            : "Push windows up while the dock is on screen, and give the space back when it hides."
                         checked: root.behaviorValue("reserveSpace", false)
-                        enabled: root.behaviorValue("hideMode", "smart") === "never"
-                        opacity: enabled ? 1 : 0.4
                         onToggled: function(value) { root.setBehavior("reserveSpace", value) }
                     }
 

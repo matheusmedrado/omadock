@@ -19,6 +19,9 @@ All notable changes to OmaDock are documented here.
   validation and atomic write as one typed into `config.json`, and the running
   dock applies it from its own file watcher without a restart. Pinned
   applications are still managed on the dock itself.
+- `behavior.reserveSpace` now applies to every hide mode, not only `never`. A
+  revealed dock takes an exclusive zone so windows move up rather than being
+  covered, and gives it back once the dock has finished hiding.
 - `scripts/check` now validates every declared entry point rather than only the
   overlay.
 
@@ -57,6 +60,16 @@ All notable changes to OmaDock are documented here.
   code. Each now accepts a real set of values, including `none` to unbind.
 
 ### Fixed
+
+- Reserving space under Smart Hide would have deadlocked the dock open. Revealing
+  pushes tiled windows clear, which erases the overlap that justified hiding, so
+  the dock would reveal once and never hide again. Compensating the geometry by
+  the live zone only moved the problem: the zone flips before the compositor has
+  reflowed, and the stale reading bounced the dock straight back open, which was
+  observed as a continuous reveal/hide cycle. With space reserved the conflict
+  test now asks whether a tiled window is present at all rather than where it
+  currently sits, which is the one form of the question that does not depend on
+  the dock's own state.
 
 - Smart Hide never hid the dock. Window records resolved through the
   `HyprlandToplevel` attached handle, which names the right window but carries no

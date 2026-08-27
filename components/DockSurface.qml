@@ -23,15 +23,19 @@ PanelWindow {
     readonly property real dockWidth: dockContent.width
     readonly property real dockHeight: dockContent.height
     readonly property bool reserveSpace: !!(configuration && configuration.behavior
-        && configuration.behavior.hideMode === "never"
         && configuration.behavior.reserveSpace === true)
+    // Held while the dock is on screen and released once it is fully hidden, so
+    // a dock that hides gives the space back and one that never hides keeps it.
+    readonly property bool reservingNow: root.reserveSpace && !!root.hideController
+        && root.hideController.reservesSpace
 
     visible: root.requestedVisible && !remapGuard.remapping
     color: "transparent"
     implicitHeight: surfaceHeight
     aboveWindows: true
     focusable: false
-    exclusionMode: root.reserveSpace ? ExclusionMode.Auto : ExclusionMode.Ignore
+    exclusionMode: root.reserveSpace ? ExclusionMode.Normal : ExclusionMode.Ignore
+    exclusiveZone: root.reservingNow ? root.surfaceHeight : 0
     surfaceFormat.opaque: false
     WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
     mask: Region {

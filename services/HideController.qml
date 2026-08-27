@@ -55,6 +55,15 @@ Item {
     readonly property bool edgeEnabled: root.monitorEnabled
         && root.hideMode !== "never" && !root.fullscreen
 
+    readonly property bool reserveSpace: !!behavior.reserveSpace
+    // Space is held from the moment the reveal starts until the hide animation
+    // has finished. Releasing it any earlier would let the windows grow back
+    // under a dock that is still on screen, and -- because the conflict test
+    // compensates for the zone -- would briefly read as "clear" and bounce the
+    // dock back open.
+    readonly property bool reservesSpace: root.reserveSpace && root.monitorEnabled
+        && root.stateName !== "HIDDEN" && root.stateName !== "SUSPENDED"
+
     function windowRecords() {
         return root.windowService && Array.isArray(root.windowService.records)
             ? root.windowService.records : []
@@ -74,7 +83,8 @@ Item {
 
         var records = root.windowRecords()
         for (var index = 0; index < records.length; index += 1) {
-            if (Geometry.conflicts(records[index], dockRect, workspace, root.monitorName)) return true
+            if (Geometry.conflicts(records[index], dockRect, workspace,
+                    root.monitorName, root.reserveSpace)) return true
         }
         return false
     }
