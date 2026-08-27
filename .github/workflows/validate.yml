@@ -26,7 +26,9 @@ jobs:
             qt6-declarative-dev-tools \
             qml6-module-qttest \
             qml6-module-qtqml \
-            qml6-module-qtquick
+            qml6-module-qtqml-workerscript \
+            qml6-module-qtquick \
+            qml6-module-qtquick-window
 
       - name: Validate plugin tree
         env:
