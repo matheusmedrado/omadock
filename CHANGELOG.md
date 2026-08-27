@@ -51,8 +51,8 @@ All notable changes to OmaDock are documented here.
 - Labels are shown by default and slot numbers hidden, matching the new layout.
 - Application glyphs are drawn as a 7x7 dot matrix rather than font icons, so the
   artwork lives in the repository as editable bitmaps and shares the dock's
-  low-resolution character. `assets/glyphs` and the `usePixelGlyphs` setting now
-  mean what their names always said; set it to false for real application icons.
+  low-resolution character. The `usePixelGlyphs` setting now means what its name
+  always said; set it to false for each application's own icon instead.
 - The prompt and the marker rules sit on the same matrix as the glyphs, so the
   whole strip reads as one dot grid instead of mixing dots with vector strokes.
 - Added an ordered-dither (Bayer) texture that gathers along the bottom edge of
