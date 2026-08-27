@@ -118,11 +118,16 @@ if [ -z "$qmltestrunner_bin" ] && [ -x /usr/lib/qt6/bin/qmltestrunner ]; then
     qmltestrunner_bin=/usr/lib/qt6/bin/qmltestrunner
 fi
 
+# Skipping the suite keeps the check usable on a machine without Qt, but a CI
+# run that skips it is a green tick over nothing. OMADOCK_REQUIRE_TESTS turns the
+# skip into a failure so a broken toolchain is visible rather than silent.
 if [ -n "$qmltestrunner_bin" ]; then
     env -u QT_QPA_PLATFORMTHEME QT_QPA_PLATFORM=offscreen \
         QML_XHR_ALLOW_FILE_READ=1 \
         "$qmltestrunner_bin" -input tests \
         || fail "QML tests failed"
+elif [ "${OMADOCK_REQUIRE_TESTS:-0}" = "1" ]; then
+    fail "qmltestrunner not found and OMADOCK_REQUIRE_TESTS is set"
 else
     printf 'OmaDock check: qmltestrunner not found; skipping QML tests\n'
 fi

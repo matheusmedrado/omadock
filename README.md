@@ -36,6 +36,11 @@ or a macOS dock cosplay contest.
 The first release targets the Omarchy `4.0.1-1` / Quickshell `0.3.1`
 baseline.
 
+Multi-monitor support is implemented — each monitor keeps its own hide state, and
+`monitorMode` selects `all`, `focused`, or a named list — but it has so far only
+been exercised on a single display. Reports from multi-monitor setups are
+welcome.
+
 ## Installation
 
 ### Omarchy plugin

@@ -15,5 +15,20 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
 
+      # The QML suite only needs Qt Test and the model sources; it does not need
+      # Quickshell or the Omarchy shell, which is why it can run here at all.
+      # qmllint is left out on purpose: without those imports available it has
+      # nothing meaningful to resolve.
+      - name: Install Qt test tooling
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            qt6-declarative-dev-tools \
+            qml6-module-qttest \
+            qml6-module-qtqml \
+            qml6-module-qtquick
+
       - name: Validate plugin tree
+        env:
+          OMADOCK_REQUIRE_TESTS: "1"
         run: ./scripts/check
