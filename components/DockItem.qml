@@ -2,6 +2,7 @@ import QtQuick
 import qs.Commons
 import "../models/ActionModel.js" as ActionModel
 import "../models/DockModel.js" as DockModel
+import "../models/GlyphModel.js" as GlyphModel
 
 Item {
     id: root
@@ -24,139 +25,125 @@ Item {
     property real pressX: 0
     property real pressY: 0
     property int pressButton: Qt.NoButton
+    property real wheelAccumulator: 0
     readonly property int dragThreshold: 8
+    readonly property int wheelNotch: 120
 
-    opacity: root.dragSource ? 0.45 : 1
+    opacity: root.dragSource ? 0.4 : 1
 
     readonly property var metrics: DockModel.surfaceMetrics(configuration)
-    readonly property int itemSize: metrics.itemSize
-    readonly property int iconSize: metrics.iconSize
+    readonly property int itemHeight: metrics.itemHeight
+    readonly property int glyphSize: metrics.glyphSize
+    readonly property int itemPadding: metrics.itemPadding
     readonly property bool localActive: hasLocalActiveWindow()
+    readonly property bool running: !!root.itemRecord.running
+    readonly property bool urgent: !!root.itemRecord.urgent
     readonly property bool hasContextActions: ActionModel.actionsForItem(root.itemRecord).length > 0
     readonly property string slotLabel: DockModel.slotLabel(root.itemRecord.slot)
     readonly property string countLabel: DockModel.instanceCountLabel(root.itemRecord.windowCount)
+    readonly property string commandLabel: GlyphModel.commandLabel(
+        root.itemRecord.name, root.itemRecord.desktopId, root.itemRecord.appId)
     readonly property bool showSlotNumbers: configuration.appearance
         && configuration.appearance.showSlotNumbers !== false
     readonly property string showLabels: configuration.appearance && configuration.appearance.showLabels
-        ? configuration.appearance.showLabels : "hover"
-    readonly property bool usePixelGlyphs: configuration.appearance
-        && configuration.appearance.usePixelGlyphs !== false
+        ? configuration.appearance.showLabels : "always"
+    readonly property bool labelVisible: root.showLabels === "always"
+        || (root.showLabels === "hover" && root.hovered)
+
+    // Running is carried by the label's weight and the marker rule underneath;
+    // a pinned app that is not running stays dim so the strip reads like a
+    // command history where only live entries are lit.
+    readonly property color itemColor: {
+        if (root.urgent) return Color.urgent
+        if (root.localActive) return Color.accent
+        if (root.pressed) return Color.accent
+        if (root.running) return Color.bar.text
+        return Util.alpha(Color.bar.text, root.hovered ? 0.85 : 0.45)
+    }
 
     function hasLocalActiveWindow() {
-        var windows = Array.isArray(root.itemRecord.windows) ? root.itemRecord.windows : []
+        var windows = DockModel.toArray(root.itemRecord.windows)
         for (var index = 0; index < windows.length; index += 1) {
             var window = windows[index]
             if (!window || !window.active) continue
             if (!root.monitorName) return true
             if (window.monitorName === root.monitorName) return true
-            if (Array.isArray(window.screenNames)
-                    && window.screenNames.indexOf(root.monitorName) >= 0) return true
+            if (DockModel.toArray(window.screenNames).indexOf(root.monitorName) >= 0) return true
         }
         return false
     }
 
-    width: itemSize
-    height: itemSize
+    implicitWidth: itemRow.implicitWidth + itemPadding * 2
+    implicitHeight: itemHeight
+    width: implicitWidth
+    height: implicitHeight
 
     Rectangle {
-        id: tile
         anchors.fill: parent
-        radius: Style.cornerRadius > 0 ? Math.min(Style.cornerRadius, 8) : 0
-        color: root.pressed ? Color.accent : Color.bar.background
-        border.color: root.itemRecord.urgent ? Color.urgent
-            : root.localActive ? Color.accent : Color.muted
-        border.width: 1
+        radius: Style.cornerRadius > 0 ? Math.min(Style.cornerRadius, 6) : 0
+        color: root.pressed ? Style.pressedFill
+            : root.hovered || root.contextMenuOpen ? Style.hoverFill
+            : "transparent"
     }
 
-    Text {
-        id: slotNumber
-        visible: root.showSlotNumbers && root.slotLabel !== ""
-        anchors.left: parent.left
-        anchors.top: parent.top
-        anchors.leftMargin: Style.space(4)
-        anchors.topMargin: Style.space(2)
-        text: root.slotLabel
-        color: root.pressed ? Color.background : Color.bar.text
-        font.family: Style.font.family
-        font.pixelSize: Style.font.caption
-    }
-
-    DockIcon {
+    Row {
+        id: itemRow
         anchors.centerIn: parent
-        itemRecord: root.itemRecord
-        iconSize: root.iconSize
-        usePixelGlyphs: root.usePixelGlyphs
+        spacing: Style.space(6)
+
+        Text {
+            anchors.verticalCenter: parent.verticalCenter
+            visible: root.showSlotNumbers && root.slotLabel !== ""
+            text: root.slotLabel
+            color: Util.alpha(root.itemColor, 0.55)
+            font.family: Style.font.family
+            font.pixelSize: Style.font.caption
+        }
+
+        DockIcon {
+            anchors.verticalCenter: parent.verticalCenter
+            itemRecord: root.itemRecord
+            glyphSize: root.glyphSize
+            tint: root.itemColor
+            useCuratedGlyphs: root.configuration.appearance
+                && root.configuration.appearance.usePixelGlyphs !== false
+        }
+
+        DockLabel {
+            anchors.verticalCenter: parent.verticalCenter
+            visible: root.labelVisible
+            text: root.commandLabel
+            color: root.itemColor
+            font.family: Style.font.family
+            font.pixelSize: Style.font.bodySmall
+        }
+
+        Text {
+            anchors.verticalCenter: parent.verticalCenter
+            visible: root.countLabel !== ""
+            text: root.countLabel
+            color: Util.alpha(root.itemColor, 0.6)
+            font.family: Style.font.family
+            font.pixelSize: Style.font.caption
+        }
     }
 
-    DockLabel {
-        visible: root.showLabels === "always"
-        anchors.left: parent.left
-        anchors.right: parent.right
-        anchors.bottom: parent.bottom
-        anchors.leftMargin: Style.space(2)
-        anchors.rightMargin: Style.space(2)
-        anchors.bottomMargin: Style.space(2)
-        text: root.itemRecord.shortLabel || "APP"
-        color: root.pressed ? Color.background : Color.bar.text
-        font.family: Style.font.family
-        font.pixelSize: Style.font.caption
-    }
-
+    // Marker rule: accent under the focused app, a dim rule under one that is
+    // merely running, nothing under a pinned app that is not.
     Rectangle {
-        visible: root.localActive
+        visible: root.running
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.bottom: parent.bottom
         anchors.bottomMargin: Style.space(2)
-        width: Style.space(10)
-        height: Style.space(4)
-        color: root.pressed ? Color.background : Color.accent
-    }
+        width: root.localActive ? itemRow.implicitWidth : Style.space(12)
+        height: Math.max(1, Style.space(2))
+        radius: height / 2
+        color: root.urgent ? Color.urgent
+            : root.localActive ? Color.accent
+            : Util.alpha(Color.bar.text, 0.55)
 
-    Rectangle {
-        visible: !!root.itemRecord.urgent
-        anchors.right: parent.right
-        anchors.top: parent.top
-        anchors.rightMargin: Style.space(5)
-        anchors.topMargin: Style.space(5)
-        width: Style.space(6)
-        height: width
-        rotation: 45
-        transformOrigin: Item.Center
-        color: Color.urgent
-    }
-
-    Rectangle {
-        visible: !!root.itemRecord.running && !root.localActive
-        anchors.left: parent.left
-        anchors.bottom: parent.bottom
-        anchors.leftMargin: Style.space(4)
-        anchors.bottomMargin: Style.space(3)
-        width: Style.space(5)
-        height: width
-        color: Color.muted
-    }
-
-    Rectangle {
-        id: countBadge
-        visible: root.countLabel !== ""
-        anchors.right: parent.right
-        anchors.bottom: parent.bottom
-        anchors.rightMargin: Style.space(3)
-        anchors.bottomMargin: Style.space(3)
-        width: countText.implicitWidth + Style.space(6)
-        height: Style.space(13)
-        radius: Style.cornerRadius > 0 ? Math.min(Style.cornerRadius, 3) : 0
-        color: Color.bar.background
-        border.color: Color.muted
-        border.width: 1
-
-        Text {
-            id: countText
-            anchors.centerIn: parent
-            text: root.countLabel
-            color: root.pressed ? Color.background : Color.bar.text
-            font.family: Style.font.family
-            font.pixelSize: Style.font.caption
+        Behavior on width {
+            NumberAnimation { duration: 120; easing.type: Easing.OutCubic }
         }
     }
 
@@ -221,20 +208,34 @@ Item {
             else if (mouse.button === Qt.LeftButton) root.appService.focusOrLaunch(root.itemRecord)
             else if (mouse.button === Qt.RightButton && root.hasContextActions) root.contextMenuOpen = true
         }
+
+        // A touchpad reports a scroll gesture as a stream of small deltas. Acting
+        // on each one cycles through every window of an application in a single
+        // flick, so deltas are accumulated into discrete notches first.
         onWheel: function(wheel) {
-            if (root.appService && wheel.angleDelta.y !== 0) root.appService.focusNext(root.itemRecord)
+            if (!root.appService || wheel.angleDelta.y === 0) return
+            root.wheelAccumulator += wheel.angleDelta.y
+            while (Math.abs(root.wheelAccumulator) >= root.wheelNotch) {
+                var forward = root.wheelAccumulator > 0
+                root.wheelAccumulator += forward ? -root.wheelNotch : root.wheelNotch
+                if (forward) root.appService.focusNext(root.itemRecord)
+                else root.appService.focusPrevious(root.itemRecord)
+            }
         }
     }
+
+    onHoveredChanged: if (!root.hovered) root.wheelAccumulator = 0
 
     DockTooltip {
         targetItem: root
         targetWindow: root.dockWindow
-        visible: root.hovered && root.showLabels !== "never" && !root.contextMenuOpen
+        visible: root.hovered && !root.labelVisible && root.showLabels !== "never"
+            && !root.contextMenuOpen
         label: {
             var count = root.itemRecord.windowCount || 0
-            var suffix = count > 0 ? "  " + count + "x" : ""
+            var suffix = count > 1 ? "  " + count + "x" : ""
             return (root.slotLabel !== "" ? root.slotLabel + "  " : "")
-                + (root.itemRecord.shortLabel || "APP") + suffix
+                + root.commandLabel + suffix
         }
     }
 

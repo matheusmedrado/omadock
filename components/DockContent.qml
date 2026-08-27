@@ -21,15 +21,20 @@ Item {
     property int dragTargetIndex: -1
     property real dragPointerX: -1
     readonly property var metrics: DockModel.surfaceMetrics(configuration)
-    readonly property int itemSize: metrics.itemSize
+    readonly property int itemHeight: metrics.itemHeight
     readonly property int gap: metrics.gap
-    readonly property int padding: Style.space(4)
-    readonly property int itemCount: Array.isArray(items) ? items.length : 0
-    readonly property int pinnedCount: configuration && Array.isArray(configuration.pinned)
-        ? configuration.pinned.length : 0
+    readonly property int padding: metrics.contentPadding
+    readonly property int itemCount: DockModel.toArray(items).length
+    readonly property int pinnedCount: configuration
+        ? DockModel.toArray(configuration.pinned).length : 0
+    readonly property bool showPrompt: configuration.appearance
+        && configuration.appearance.showPrompt !== false
+    // Items carry their own label, so the strip is measured from what the row
+    // actually lays out rather than from a fixed per-item width.
+    readonly property real rowWidth: dockRow.implicitWidth
 
-    implicitWidth: DockModel.contentWidth(itemCount, itemSize, gap) + padding * 2
-    implicitHeight: itemSize + padding * 2
+    implicitWidth: rowWidth + padding * 2
+    implicitHeight: itemHeight + padding * 2
     width: implicitWidth
     height: implicitHeight
 
@@ -153,6 +158,8 @@ Item {
         return root.pinnedEndX() - root.gap / 2 - 1.5
     }
 
+    // One surface for the whole strip. Individual items are unbordered so the
+    // dock reads as a single prompt line rather than a shelf of tiles.
     Rectangle {
         anchors.fill: parent
         radius: Style.cornerRadius > 0 ? Math.min(Style.cornerRadius, 10) : 0
@@ -163,8 +170,8 @@ Item {
             return Qt.rgba(Color.bar.background.r, Color.bar.background.g,
                            Color.bar.background.b, opacity)
         }
-        border.color: Color.muted
-        border.width: 1
+        border.color: Style.normalBorderColor
+        border.width: Math.max(1, Style.normalBorderWidth)
     }
 
     HoverHandler {
@@ -184,24 +191,55 @@ Item {
         anchors.centerIn: parent
         spacing: root.gap
 
+        Text {
+            anchors.verticalCenter: parent.verticalCenter
+            visible: root.showPrompt
+            text: "❯"
+            color: Color.accent
+            font.family: Style.font.family
+            font.pixelSize: Style.font.subtitle
+            font.bold: true
+            leftPadding: Style.space(2)
+            rightPadding: Style.space(3)
+        }
+
         Repeater {
             id: dockRepeater
             model: root.items
 
             delegate: Component {
-                DockItem {
+                Row {
+                    id: slot
                     required property var modelData
                     required property int index
-                    itemRecord: modelData
-                    itemIndex: index
-                    configuration: root.configuration
-                    appService: root.appService
-                    configService: root.configService
-                    monitorName: root.monitorName
-                    hideController: root.hideController
-                    dockContent: root
-                    dragSource: root.dragActive && root.dragSourceIndex === index
-                    dockWindow: root.dockWindow
+                    spacing: root.gap
+
+                    // Pinned entries come first, so the first unpinned item is
+                    // where the running-application group begins.
+                    readonly property bool startsRunningGroup: !modelData.pinned
+                        && index === root.pinnedCount && index > 0
+
+                    Text {
+                        anchors.verticalCenter: parent.verticalCenter
+                        visible: slot.startsRunningGroup
+                        text: "│"
+                        color: Util.alpha(Color.bar.text, 0.3)
+                        font.family: Style.font.family
+                        font.pixelSize: Style.font.bodySmall
+                    }
+
+                    DockItem {
+                        itemRecord: slot.modelData
+                        itemIndex: slot.index
+                        configuration: root.configuration
+                        appService: root.appService
+                        configService: root.configService
+                        monitorName: root.monitorName
+                        hideController: root.hideController
+                        dockContent: root
+                        dragSource: root.dragActive && root.dragSourceIndex === slot.index
+                        dockWindow: root.dockWindow
+                    }
                 }
             }
         }
@@ -212,7 +250,7 @@ Item {
         x: root.insertionMarkerX
         y: dockRow.y - Style.space(4)
         width: 3
-        height: root.itemSize + Style.space(8)
+        height: root.itemHeight + Style.space(4)
         radius: width / 2
         color: Color.accent
     }

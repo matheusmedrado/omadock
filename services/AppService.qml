@@ -101,7 +101,14 @@ Item {
     function makeItem(group, desktopId, pinned, slot) {
         var resolvedDesktopId = desktopId || (group && group.desktopId ? group.desktopId : "")
         var entry = resolvedDesktopId ? entryFor(resolvedDesktopId) : group.entry
-        var windows = group ? group.windows : []
+        // ToplevelManager does not promise a stable order, so cycling would jump
+        // around as windows are re-enumerated. Sorting by the Hyprland address
+        // keeps "next window" meaning the same window twice in a row.
+        var windows = group ? group.windows.slice() : []
+        windows.sort(function(first, second) {
+            return String(first.key || "") < String(second.key || "") ? -1
+                : String(first.key || "") > String(second.key || "") ? 1 : 0
+        })
         var active = false
         var urgent = false
         for (var index = 0; index < windows.length; index += 1) {
@@ -230,6 +237,13 @@ Item {
         var nextIndex = ActionModel.nextWindowIndex(item.windows)
         if (nextIndex < 0) return false
         return focusWindow(item.windows[nextIndex])
+    }
+
+    function focusPrevious(item) {
+        if (!item || item.windowCount === 0) return false
+        var previousIndex = ActionModel.previousWindowIndex(item.windows)
+        if (previousIndex < 0) return false
+        return focusWindow(item.windows[previousIndex])
     }
 
     function launchNew(item) {

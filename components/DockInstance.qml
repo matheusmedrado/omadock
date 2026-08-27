@@ -53,6 +53,9 @@ Item {
             windowConflict: hideController.windowConflict,
             windowRecordCount: records.length,
             windows: windows,
+            windowService: root.appService && root.appService.windowService
+                && typeof root.appService.windowService.runtimeStatus === "function"
+                ? root.appService.windowService.runtimeStatus() : null,
             itemCount: root.appService && Array.isArray(root.appService.items)
                 ? root.appService.items.length : -1,
             surfaceVisible: surface.visible,

@@ -4,6 +4,26 @@ import "../models/ActionModel.js" as ActionModel
 TestCase {
     name: "ActionModel"
 
+    function test_cyclingWrapsInBothDirections() {
+        var windows = [{ active: false }, { active: true }, { active: false }]
+        compare(ActionModel.nextWindowIndex(windows), 2)
+        compare(ActionModel.previousWindowIndex(windows), 0)
+
+        var last = [{ active: false }, { active: true }]
+        compare(ActionModel.nextWindowIndex(last), 0)
+
+        var first = [{ active: true }, { active: false }]
+        compare(ActionModel.previousWindowIndex(first), 1)
+    }
+
+    function test_cyclingWithNoActiveWindowPicksAnEnd() {
+        var windows = [{ active: false }, { active: false }]
+        compare(ActionModel.nextWindowIndex(windows), 0)
+        compare(ActionModel.previousWindowIndex(windows), 1)
+        compare(ActionModel.nextWindowIndex([]), -1)
+        compare(ActionModel.previousWindowIndex([]), -1)
+    }
+
     function test_cyclesAfterActiveWindow() {
         var windows = [{ active: false }, { active: true }, { active: false }]
         compare(ActionModel.nextWindowIndex(windows), 2)

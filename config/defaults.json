@@ -5,12 +5,13 @@
   "monitors": [],
   "appearance": {
     "density": "compact",
-    "iconSize": 24,
-    "itemSize": 44,
+    "iconSize": 16,
+    "itemSize": 28,
     "gap": 4,
     "edgeMargin": 8,
-    "showSlotNumbers": true,
-    "showLabels": "hover",
+    "showSlotNumbers": false,
+    "showLabels": "always",
+    "showPrompt": true,
     "usePixelGlyphs": true,
     "backgroundOpacity": 0.94
   },

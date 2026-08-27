@@ -109,6 +109,7 @@ fi
 
 if [ -n "$qmltestrunner_bin" ]; then
     env -u QT_QPA_PLATFORMTHEME QT_QPA_PLATFORM=offscreen \
+        QML_XHR_ALLOW_FILE_READ=1 \
         "$qmltestrunner_bin" -input tests \
         || fail "QML tests failed"
 else

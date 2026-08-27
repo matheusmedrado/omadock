@@ -7,12 +7,25 @@ function isLaunchable(item) {
 }
 
 function nextWindowIndex(windows) {
-    if (!Array.isArray(windows) || windows.length === 0) return -1
+    return stepWindowIndex(windows, 1)
+}
 
-    for (var index = 0; index < windows.length; index += 1) {
-        if (windows[index] && windows[index].active) return (index + 1) % windows.length
+function previousWindowIndex(windows) {
+    return stepWindowIndex(windows, -1)
+}
+
+// Window lists reach here from a QML delegate, where they are QVariantList
+// rather than Array. Length-based access works for both.
+function stepWindowIndex(windows, step) {
+    var count = windows && typeof windows === "object" ? Number(windows.length) : 0
+    if (!isFinite(count) || count <= 0) return -1
+
+    for (var index = 0; index < count; index += 1) {
+        if (windows[index] && windows[index].active) {
+            return ((index + step) % count + count) % count
+        }
     }
-    return 0
+    return step > 0 ? 0 : count - 1
 }
 
 function actionsForItem(item) {
