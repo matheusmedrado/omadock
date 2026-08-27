@@ -23,15 +23,15 @@ changelog_version=$(sed -n 's/^## \[\([^]]*\)\].*/\1/p' CHANGELOG.md | head -n 1
     || fail "manifest version does not match the latest changelog version"
 
 plugin_id=$(jq -er '.id' manifest.json) || fail "manifest ID is missing"
-rg -q --fixed-strings "$plugin_id" README.md \
+grep -qF "$plugin_id" README.md \
     || fail "README does not use the permanent plugin ID"
-rg -q --fixed-strings "https://github.com/matheusmedrado/omadock.git" README.md \
+grep -qF "https://github.com/matheusmedrado/omadock.git" README.md \
     || fail "README does not use the repository URL"
 [ -f LICENSE ] || fail "LICENSE file is missing"
 [ "$(jq -er '.license' manifest.json)" = "MIT" ] \
     || fail "manifest license must be MIT"
 [ -s preview.png ] || fail "preview.png is missing or empty"
-rg -q --fixed-strings "![OmaDock preview](preview.png)" README.md \
+grep -qF "![OmaDock preview](preview.png)" README.md \
     || fail "README does not reference preview.png"
 
 jq -e '
@@ -78,8 +78,15 @@ jq -e '
     and (.aliases | type == "object")
 ' config/defaults.json >/dev/null || fail "default configuration is invalid"
 
-if rg -n --glob '*.qml' --glob '*.js' --glob '*.json' \
-    '(sudo|pkexec|bash[[:space:]]+-c|curl|wget|https?://)' .; then
+# Capture rather than branching on the exit status directly: a scanner that
+# fails to run exits non-zero too, which an `if scanner; then fail; fi` reads as
+# "nothing found". This check silently passed for exactly that reason while the
+# script still called ripgrep, which CI does not install.
+forbidden=$(grep -rnE --include='*.qml' --include='*.js' --include='*.json' \
+    --exclude-dir=.git \
+    '(sudo|pkexec|bash[[:space:]]+-c|curl|wget|https?://)' . || true)
+if [ -n "$forbidden" ]; then
+    printf '%s\n' "$forbidden" >&2
     fail "forbidden command or runtime network reference found"
 fi
 
