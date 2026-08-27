@@ -1,10 +1,19 @@
 import QtQuick
 import Quickshell
-import Quickshell.Hyprland
+import Quickshell.Wayland
 import qs.Commons
 import "../models/ActionModel.js" as ActionModel
 
-PopupWindow {
+// A full-screen layer surface with the menu card positioned inside it, rather
+// than a PopupWindow anchored to the dock.
+//
+// An anchored PopupWindow renders but receives no pointer input here: no hover,
+// no cursor change, and a click on a row counts as a click outside, which
+// dismissed the menu without ever running the action. Every interactive popup
+// in the Omarchy shell is built this way for the same reason -- see
+// Ui/KeyboardPanel -- so the menu follows suit. Clicks outside the card land on
+// this surface and dismiss it, which is also what the focus grab used to do.
+PanelWindow {
     id: root
 
     property Item targetItem
@@ -18,35 +27,23 @@ PopupWindow {
     readonly property var actions: ActionModel.actionsForItem(itemRecord)
     readonly property int padding: Style.space(4)
     readonly property int rowHeight: Style.space(28)
+    readonly property int cardWidth: Style.space(220)
+    readonly property int cardHeight: root.actions.length * root.rowHeight + root.padding * 2
 
     visible: root.requestedOpen && root.actions.length > 0
+    screen: root.targetWindow ? root.targetWindow.screen : null
     color: "transparent"
-    implicitWidth: Style.space(220)
-    implicitHeight: root.actions.length * root.rowHeight + root.padding * 2
+    exclusionMode: ExclusionMode.Ignore
+    surfaceFormat.opaque: false
+    WlrLayershell.layer: WlrLayer.Overlay
+    WlrLayershell.namespace: "omadock-menu"
+    WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
 
-    anchor.window: root.targetWindow
-    anchor.rect.x: {
-        if (!root.targetItem || !root.targetWindow || !root.targetWindow.contentItem
-                || !root.targetWindow.backingWindowVisible) return 0
-        var point = root.targetWindow.contentItem.mapFromItem(
-            root.targetItem, root.targetItem.width / 2, 0
-        )
-        return Math.max(Style.space(4), Math.min(
-            point.x - width / 2,
-            root.targetWindow.width - width - Style.space(4)
-        ))
-    }
-    anchor.rect.y: {
-        if (!root.targetItem || !root.targetWindow || !root.targetWindow.contentItem
-                || !root.targetWindow.backingWindowVisible) return 0
-        return root.targetWindow.contentItem.mapFromItem(root.targetItem, 0, 0).y
-            - height - Style.space(6)
-    }
-
-    HyprlandFocusGrab {
-        active: root.visible
-        windows: root.targetWindow ? [root, root.targetWindow] : [root]
-        onCleared: root.close()
+    anchors {
+        top: true
+        bottom: true
+        left: true
+        right: true
     }
 
     function close() {
@@ -69,8 +66,45 @@ PopupWindow {
         root.close()
     }
 
-    Rectangle {
+    // Where the card sits, in this surface's coordinates. Measured when the menu
+    // opens rather than bound: mapToItem is a one-shot, so as a binding it never
+    // re-ran for a different item and, worse, returned 0 whenever it happened to
+    // evaluate before the dock's backing window was up -- which pinned every
+    // menu to the left edge regardless of which application was clicked.
+    property real anchorScreenX: 0
+    property real anchorScreenY: 0
+
+    function measureAnchor() {
+        if (!root.targetItem || !root.targetWindow) return
+
+        // The dock is a full-width surface pinned to the bottom edge, so a point
+        // in its scene is already at the right screen x, and screen y is that
+        // point offset by how far the surface sits off the bottom.
+        var point = root.targetItem.mapToItem(null, root.targetItem.width / 2, 0)
+        var screenHeight = root.screen ? root.screen.height : root.height
+        root.anchorScreenX = point.x
+        root.anchorScreenY = screenHeight - root.targetWindow.height + point.y
+    }
+
+    onRequestedOpenChanged: if (root.requestedOpen) root.measureAnchor()
+    onVisibleChanged: if (root.visible) root.measureAnchor()
+
+    // Dismissal. The card sits above this, so only clicks that miss it land here.
+    MouseArea {
         anchors.fill: parent
+        acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
+        onPressed: root.close()
+    }
+
+    Rectangle {
+        id: card
+
+        x: Math.max(Style.space(4),
+            Math.min(root.anchorScreenX - width / 2, root.width - width - Style.space(4)))
+        y: Math.max(Style.space(4), root.anchorScreenY - height - Style.space(6))
+        width: root.cardWidth
+        height: root.cardHeight
+
         radius: Style.cornerRadius > 0 ? Math.min(Style.cornerRadius, 8) : 0
         color: Color.popups.background
         border.color: Color.popups.border
@@ -85,27 +119,35 @@ PopupWindow {
                 model: root.actions
 
                 delegate: Rectangle {
+                    id: row
                     required property var modelData
-                    width: root.width - root.padding * 2
+                    width: card.width - root.padding * 2
                     height: root.rowHeight
-                    color: mouseArea.containsMouse ? Color.accent : "transparent"
+                    radius: Style.cornerRadius > 0 ? Math.min(Style.cornerRadius, 5) : 0
+                    // A wash rather than a solid accent fill: a theme's accent is
+                    // often darker than its text, which left the highlighted row
+                    // harder to read than the rest.
+                    color: rowMouse.containsMouse
+                        ? Util.alpha(Color.popups.text, 0.12) : "transparent"
 
                     Text {
                         anchors.fill: parent
                         anchors.leftMargin: Style.space(8)
                         anchors.rightMargin: Style.space(8)
-                        text: modelData.label
-                        color: mouseArea.containsMouse ? Color.background : Color.popups.text
+                        text: row.modelData.label
+                        color: rowMouse.containsMouse
+                            ? Color.popups.text : Util.alpha(Color.popups.text, 0.75)
                         font.family: Style.font.family
                         font.pixelSize: Style.font.body
                         verticalAlignment: Text.AlignVCenter
                     }
 
                     MouseArea {
-                        id: mouseArea
+                        id: rowMouse
                         anchors.fill: parent
                         hoverEnabled: true
-                        onClicked: root.trigger(modelData.key)
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: root.trigger(row.modelData.key)
                     }
                 }
             }
