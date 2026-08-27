@@ -268,9 +268,9 @@ function normalizeConfig(raw, defaults) {
     value.behavior.animationMs = intValue(behavior, "animationMs", fallback.behavior.animationMs, 0, 500, warnings, "behavior")
     value.behavior.workspaceSettleMs = intValue(behavior, "workspaceSettleMs", fallback.behavior.workspaceSettleMs, 0, 1000, warnings, "behavior")
     value.behavior.showRunningUnpinned = boolValue(behavior, "showRunningUnpinned", fallback.behavior.showRunningUnpinned, warnings, "behavior")
-    value.behavior.clickAction = enumValue(behavior, "clickAction", ["focus-or-launch"], fallback.behavior.clickAction, warnings, "behavior")
-    value.behavior.middleClickAction = enumValue(behavior, "middleClickAction", ["launch-new"], fallback.behavior.middleClickAction, warnings, "behavior")
-    value.behavior.wheelAction = enumValue(behavior, "wheelAction", ["cycle-windows"], fallback.behavior.wheelAction, warnings, "behavior")
+    value.behavior.clickAction = enumValue(behavior, "clickAction", ["focus-or-launch", "focus-only", "launch-new", "cycle-windows", "none"], fallback.behavior.clickAction, warnings, "behavior")
+    value.behavior.middleClickAction = enumValue(behavior, "middleClickAction", ["launch-new", "focus-or-launch", "close-active", "none"], fallback.behavior.middleClickAction, warnings, "behavior")
+    value.behavior.wheelAction = enumValue(behavior, "wheelAction", ["cycle-windows", "none"], fallback.behavior.wheelAction, warnings, "behavior")
 
     value.pinned = normalizePinned(raw, fallback.pinned, warnings)
     value.aliases = normalizeAliases(raw, fallback.aliases, warnings)

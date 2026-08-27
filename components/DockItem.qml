@@ -204,9 +204,15 @@ Item {
                 return
             }
             if (!root.appService) return
-            if (mouse.button === Qt.MiddleButton) root.appService.launchNew(root.itemRecord)
-            else if (mouse.button === Qt.LeftButton) root.appService.focusOrLaunch(root.itemRecord)
-            else if (mouse.button === Qt.RightButton && root.hasContextActions) root.contextMenuOpen = true
+            if (mouse.button === Qt.RightButton) {
+                if (root.hasContextActions) root.contextMenuOpen = true
+                return
+            }
+
+            var action = mouse.button === Qt.MiddleButton
+                ? ActionModel.middleClickAction(root.configuration)
+                : ActionModel.clickAction(root.configuration)
+            ActionModel.performAction(action, root.appService, root.itemRecord, true)
         }
 
         // A touchpad reports a scroll gesture as a stream of small deltas. Acting
@@ -214,12 +220,14 @@ Item {
         // flick, so deltas are accumulated into discrete notches first.
         onWheel: function(wheel) {
             if (!root.appService || wheel.angleDelta.y === 0) return
+            var action = ActionModel.wheelAction(root.configuration)
+            if (action === "none") return
+
             root.wheelAccumulator += wheel.angleDelta.y
             while (Math.abs(root.wheelAccumulator) >= root.wheelNotch) {
                 var forward = root.wheelAccumulator > 0
                 root.wheelAccumulator += forward ? -root.wheelNotch : root.wheelNotch
-                if (forward) root.appService.focusNext(root.itemRecord)
-                else root.appService.focusPrevious(root.itemRecord)
+                ActionModel.performAction(action, root.appService, root.itemRecord, forward)
             }
         }
     }

@@ -4,6 +4,67 @@ import "../models/ActionModel.js" as ActionModel
 TestCase {
     name: "ActionModel"
 
+    function stubService() {
+        return {
+            calls: [],
+            focusOrLaunch: function(item) { this.calls.push("focusOrLaunch"); return true },
+            launchNew: function(item) { this.calls.push("launchNew"); return true },
+            closeActive: function(item) { this.calls.push("closeActive"); return true },
+            focusNext: function(item) { this.calls.push("focusNext"); return true },
+            focusPrevious: function(item) { this.calls.push("focusPrevious"); return true }
+        }
+    }
+
+    function test_pointerActionsFallBackWhenUnconfigured() {
+        compare(ActionModel.clickAction({}), "focus-or-launch")
+        compare(ActionModel.middleClickAction({}), "launch-new")
+        compare(ActionModel.wheelAction({}), "cycle-windows")
+
+        var bogus = { behavior: { clickAction: "explode", wheelAction: 7 } }
+        compare(ActionModel.clickAction(bogus), "focus-or-launch")
+        compare(ActionModel.wheelAction(bogus), "cycle-windows")
+    }
+
+    function test_configuredPointerActionsAreHonoured() {
+        var configuration = { behavior: {
+            clickAction: "launch-new",
+            middleClickAction: "close-active",
+            wheelAction: "none"
+        }}
+        compare(ActionModel.clickAction(configuration), "launch-new")
+        compare(ActionModel.middleClickAction(configuration), "close-active")
+        compare(ActionModel.wheelAction(configuration), "none")
+    }
+
+    function test_performActionDispatchesToTheService() {
+        var service = stubService()
+        var item = { windowCount: 2 }
+
+        ActionModel.performAction("focus-or-launch", service, item, true)
+        ActionModel.performAction("launch-new", service, item, true)
+        ActionModel.performAction("close-active", service, item, true)
+        ActionModel.performAction("cycle-windows", service, item, true)
+        ActionModel.performAction("cycle-windows", service, item, false)
+        compare(service.calls.join(","),
+                "focusOrLaunch,launchNew,closeActive,focusNext,focusPrevious")
+    }
+
+    function test_performActionIgnoresNoneAndMissingTargets() {
+        var service = stubService()
+        compare(ActionModel.performAction("none", service, { windowCount: 1 }, true), false)
+        compare(ActionModel.performAction("launch-new", null, { windowCount: 1 }, true), false)
+        compare(ActionModel.performAction("launch-new", service, null, true), false)
+        compare(service.calls.length, 0)
+    }
+
+    function test_focusOnlyDoesNotLaunchAnIdleApplication() {
+        var service = stubService()
+        compare(ActionModel.performAction("focus-only", service, { windowCount: 0 }, true), false)
+        compare(service.calls.length, 0)
+        compare(ActionModel.performAction("focus-only", service, { windowCount: 1 }, true), true)
+        compare(service.calls.join(","), "focusOrLaunch")
+    }
+
     function test_cyclingWrapsInBothDirections() {
         var windows = [{ active: false }, { active: true }, { active: false }]
         compare(ActionModel.nextWindowIndex(windows), 2)

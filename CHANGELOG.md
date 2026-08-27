@@ -25,6 +25,9 @@ All notable changes to OmaDock are documented here.
   longer cycles through every window at once, and scrolling back cycles backwards.
 - Window lists sort by address so "next window" stays stable between rebuilds.
 - Labels are shown by default and slot numbers hidden, matching the new layout.
+- `behavior.clickAction`, `middleClickAction`, and `wheelAction` are read at last.
+  They were validated but never consulted, so the pointer bindings were fixed in
+  code. Each now accepts a real set of values, including `none` to unbind.
 
 ### Fixed
 
