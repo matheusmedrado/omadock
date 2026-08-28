@@ -31,8 +31,10 @@ grep -qF "https://github.com/matheusmedrado/omadock.git" README.md \
 [ -f LICENSE ] || fail "LICENSE file is missing"
 [ "$(jq -er '.license' manifest.json)" = "MIT" ] \
     || fail "manifest license must be MIT"
+# The marketplace listing shows the root `preview.png` and does not read the
+# README, so this is the image users see before they install anything.
 [ -s preview.png ] || fail "preview.png is missing or empty"
-grep -qF "![OmaDock preview](preview.png)" README.md \
+grep -qF 'src="preview.png"' README.md \
     || fail "README does not reference preview.png"
 
 jq -e '

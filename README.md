@@ -5,7 +5,7 @@
 </p>
 
 <p align="center">
-  <img src="omaDock.png" alt="OmaDock sitting at the bottom of the Omarchy desktop" width="100%">
+  <img src="preview.png" alt="OmaDock sitting at the bottom of the Omarchy desktop" width="100%">
 </p>
 
 OmaDock is a native Quickshell overlay for Hyprland. It helps you launch,
@@ -19,8 +19,6 @@ Every entry is a dot-matrix glyph beside a lowercase command label, over an
 ordered-dither texture. State is a brightness ladder: the application you are on
 is fully lit, a running one sits below it, and a pinned one that is not running
 stays dim.
-
-![OmaDock preview](preview.png)
 
 ## In motion
 
