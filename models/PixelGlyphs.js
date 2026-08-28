@@ -193,8 +193,7 @@ function bitmapFor(key) {
 
 // Lit cells as {row, column} pairs, which is the form a delegate wants: one
 // entry per dot, so nothing has to be laid out for a cell that stays dark.
-function cellsFor(key) {
-    var rows = bitmapFor(key)
+function cellsForBitmap(rows) {
     var cells = []
     for (var row = 0; row < rows.length; row += 1) {
         var line = String(rows[row])
@@ -203,6 +202,10 @@ function cellsFor(key) {
         }
     }
     return cells
+}
+
+function cellsFor(key) {
+    return cellsForBitmap(bitmapFor(key))
 }
 
 // A horizontal run of dots, used for the marker rules under an application so
@@ -222,4 +225,37 @@ function columnCells(count) {
     var total = Math.max(0, Math.floor(Number(count) || 0))
     for (var row = 0; row < total; row += 1) cells.push({ row: row, column: 0 })
     return cells
+}
+
+
+// Artwork for the bar widget, which draws its icon at roughly a third of a dock
+// glyph. The dot size is a fraction of the pitch, so a 7x7 matrix at that size
+// rounds to a dot as wide as its own cell: the gutter disappears, the dots meet,
+// and the glyph reads as a solid shape rather than as a matrix -- which is the
+// one thing every mark in this plugin is supposed to read as. Five cells leave
+// room for a gutter at the size the bar actually renders.
+var BAR_SIZE = 5
+
+var BAR_GLYPHS = {
+    // The chevron that opens the dock's own strip, so the bar carries the same
+    // mark as the prompt it toggles.
+    prompt: [
+        "10000",
+        "01000",
+        "00100",
+        "01000",
+        "10000"
+    ]
+}
+
+function hasBar(key) {
+    return Object.prototype.hasOwnProperty.call(BAR_GLYPHS, String(key || ""))
+}
+
+function barBitmapFor(key) {
+    return hasBar(key) ? BAR_GLYPHS[key] : BAR_GLYPHS.prompt
+}
+
+function barCellsFor(key) {
+    return cellsForBitmap(barBitmapFor(key))
 }

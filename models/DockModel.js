@@ -52,6 +52,14 @@ function surfaceMetrics(configuration) {
     }
 }
 
+// How long a hover label takes to open or close. It rides behavior.animationMs
+// so that turning motion off (0) silences the label too, rather than leaving one
+// animation running for a user who asked for none.
+function labelRevealMs(configuration) {
+    var behavior = objectOrEmpty(configuration && configuration.behavior)
+    return boundedInteger(behavior.animationMs, 160, 0, 500)
+}
+
 // Dragging a pinned application clear of the strip unpins it, the way a dock
 // icon is dragged off on macOS. Only vertical distance counts: the strip is
 // horizontal and dragging past either end is how an item is moved to the front
