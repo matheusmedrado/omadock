@@ -4,7 +4,33 @@ All notable changes to OmaDock are documented here.
 
 ## [Unreleased]
 
-Nothing yet.
+### Fixed
+
+- The dock no longer rebuilds itself when a window only changes its title. A
+  terminal running an agent CLI rewrites its own title on a spinner cadence,
+  and Hyprland re-emits `activewindow` alongside `windowtitle` for the focused
+  window, so the dock was refreshing about once a second for every such
+  terminal. Each refresh republished the window records, which rebuilt the item
+  strip, and because the strip's Repeater is backed by a plain list QML cannot
+  diff, every dock item was destroyed and recreated -- losing the hover under
+  the pointer, restarting the colour easing, blinking any open tooltip, and
+  cancelling a drag in progress. Window titles are now neither listened for nor
+  compared, the focused window is tracked by address rather than by the
+  `activewindow` payload that carries its title, and the record and item lists
+  are compared by value so a rebuild that lands on the same answer is not
+  republished. A dock sitting next to an idle agent terminal now makes no IPC
+  calls at all, where it previously made one a second.
+- Smart Hide no longer flicks the dock open while a window refresh is still
+  settling. An incomplete set of window records was published before the
+  retry that exists to reject it, and a record without a workspace reads as no
+  conflict, so the dock revealed and then hid again as soon as the real
+  geometry arrived. Incomplete sets are now held back until the retries are
+  spent. With `behavior.reserveSpace` enabled this also stops the exclusive
+  zone toggling on each false reveal, which was reflowing and re-animating
+  tiled windows.
+- Moving or resizing a window no longer rebuilds the dock items. Item state is
+  compared on the window fields the strip actually draws from, so geometry
+  changing on every frame of a drag stays with Smart Hide, where it is used.
 
 ## [0.1.0] - 2026-08-27
 

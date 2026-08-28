@@ -1,6 +1,7 @@
 import QtQuick
 import Quickshell.Hyprland
 import Quickshell.Wayland
+import "../models/WindowModel.js" as WindowModel
 
 Item {
     id: root
@@ -10,6 +11,11 @@ Item {
     property int ipcSettleMs: 25
     property int settleRetries: 0
     readonly property int maxSettleRetries: 4
+    // Focus is tracked by address rather than by the `activewindow` payload,
+    // which carries the focused window's title and so is re-emitted on every
+    // spinner frame of a terminal running an agent CLI. Comparing addresses
+    // means only a real focus change costs a refresh.
+    property string activeAddress: ""
     signal workspaceTransition()
 
     function modelValues(model) {
@@ -182,18 +188,30 @@ Item {
                 index
             ))
         }
-        records = nextRecords
 
         // refreshToplevels() answers asynchronously, so the settle delay can
         // land before Hyprland has filled in geometry. A record without a
         // workspace would read as "no conflict" and wrongly reveal the dock,
         // so retry a bounded number of times until the payload arrives.
+        //
+        // The retry has to come before the assignment. Publishing first and
+        // then retrying handed the dock exactly the half-built set this guard
+        // exists to reject: Smart Hide read it as an empty band, revealed, and
+        // hid again when the real payload landed a moment later. After the
+        // retries are spent the set is published as it stands, so a window
+        // Hyprland never describes cannot leave the dock stuck.
         if (root.missingIpcPayload(nextRecords) && root.settleRetries < root.maxSettleRetries) {
             root.settleRetries += 1
             refreshTimer.restart()
             return
         }
         root.settleRetries = 0
+
+        // Rebuilding always produces a fresh array, so without this the records
+        // are republished on every event even when nothing about them moved,
+        // and every dock item is destroyed and recreated underneath the pointer.
+        if (WindowModel.sameRecords(root.records, nextRecords)) return
+        records = nextRecords
     }
 
     function missingIpcPayload(candidateRecords) {
@@ -213,25 +231,19 @@ Item {
         settleTimer.restart()
     }
 
-    function relevantEvent(event) {
-        var name = String(event && (event.name || event.event || event.type) || "").toLowerCase()
-        var events = [
-            "openwindow", "closewindow", "movewindow", "movewindowv2", "windowtitle",
-            "activewindow", "activewindowv2", "fullscreen", "workspace", "workspacev2",
-            "moveworkspace", "moveworkspacev2", "monitoradded", "monitorremoved",
-            "focusedmon", "focusedmonv2", "changefloating", "urgent"
-        ]
-        for (var index = 0; index < events.length; index += 1) {
-            if (name === events[index] || name.indexOf(events[index]) === 0) return true
+    function handleEvent(event) {
+        if (WindowModel.isActiveWindowEvent(event)) {
+            var address = WindowModel.activeWindowAddress(event)
+            // The v1 form is ignored outright; it cannot say which window was
+            // focused when two windows of one application are open.
+            if (address === null || address === root.activeAddress) return
+            root.activeAddress = address
+            root.scheduleRefresh()
+            return
         }
-        return false
-    }
 
-    function isWorkspaceEvent(event) {
-        var name = String(event && (event.name || event.event || event.type) || "").toLowerCase()
-        return name.indexOf("workspace") === 0
-            || name.indexOf("moveworkspace") === 0
-            || name.indexOf("focusedmon") === 0
+        if (WindowModel.isWorkspaceEvent(event)) root.workspaceTransition()
+        if (WindowModel.isRefreshEvent(event)) root.scheduleRefresh()
     }
 
     function runtimeStatus() {
@@ -282,10 +294,7 @@ Item {
     Connections {
         target: Hyprland
         function onActiveToplevelChanged() { root.scheduleRefresh() }
-        function onRawEvent(event) {
-            if (root.isWorkspaceEvent(event)) root.workspaceTransition()
-            if (root.relevantEvent(event)) root.scheduleRefresh()
-        }
+        function onRawEvent(event) { root.handleEvent(event) }
     }
 
     Component.onCompleted: root.scheduleRefresh()
