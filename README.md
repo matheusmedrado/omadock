@@ -218,8 +218,8 @@ after uninstalling the plugin.
 
 ## Development
 
-The architecture, milestones, validation rules, and release checklist live in
-[`planning.md`](planning.md).
+How to set up a working checkout, what the checks enforce, and how a release is
+cut are in [`CONTRIBUTING.md`](CONTRIBUTING.md).
 
 Run the local checks with:
 
