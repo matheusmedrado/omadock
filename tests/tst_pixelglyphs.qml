@@ -61,4 +61,15 @@ TestCase {
         compare(PixelGlyphs.ruleCells(0).length, 0)
         compare(PixelGlyphs.ruleCells(-3).length, 0)
     }
+
+    function test_columnCellsAreASingleColumn() {
+        var cells = PixelGlyphs.columnCells(5)
+        compare(cells.length, 5)
+        for (var index = 0; index < cells.length; index += 1) {
+            compare(cells[index].column, 0)
+            compare(cells[index].row, index)
+        }
+        compare(PixelGlyphs.columnCells(0).length, 0)
+        compare(PixelGlyphs.columnCells(-3).length, 0)
+    }
 }

@@ -2,6 +2,47 @@
 
 All notable changes to OmaDock are documented here.
 
+## [Unreleased]
+
+### Added
+
+- Pressing a dock entry now dips its brightness for as long as the button is
+  held. Press previously shared the focused rung of the brightness ladder, so
+  clicking the application you were already on produced no feedback at all.
+
+### Changed
+
+- The running marker sits under the application glyph instead of under the
+  middle of the entry. An entry is as wide as its label, so on a long one the
+  rule drifted out from under the mark it belongs to and the strip lost its
+  baseline.
+- The running marker sits on the glyph's own matrix, one pitch below its last
+  row, so the two are separated by the same gutter the matrix uses everywhere
+  else. The margin was three pixels against a four-pixel pitch, which left the
+  run's dots flush against the glyph with no gutter at all.
+- The break between pinned and running-unpinned applications is a column of
+  dots rather than a text pipe, and the drag insertion marker is a column of
+  dots rather than a solid rounded bar. Both were the only marks in the strip
+  not drawn on the matrix everything else shares.
+- The prompt opening the strip is drawn at 75% accent. At full accent it was
+  the most saturated mark on the strip and competed with the focused entry's
+  marker, which is the only other accent there is.
+- The dither texture is chunkier and its ramp shorter: `appearance.ditherCell`
+  now defaults to `3`, with the coverage pulled back to match, because a bigger
+  cell carries more weight at the same coverage. A two-pixel cell reads as
+  noise rather than as the deliberate ordered dither it is meant to be. An
+  existing `config.json` keeps whatever `ditherCell` it already sets -- the new
+  default only reaches a fresh install.
+- An urgent application colours its glyph and its marker rather than its label
+  as well. Repainting the label dropped a red word into a row of readable ones,
+  which is harder to read and no more noticeable.
+
+### Fixed
+
+- A hover tooltip no longer overlaps the top edge of the dock. It was placed
+  flush to the item it points at, and an item sits inside the surface's content
+  padding, so the tooltip landed on the dock's own rounded corner.
+
 ## [0.1.1] - 2026-08-28
 
 ### Fixed

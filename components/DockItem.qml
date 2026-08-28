@@ -76,16 +76,32 @@ Item {
     // one you are on *below* its neighbours. Accent stays on the marker, where it
     // tags the focused entry without having to carry brightness.
     readonly property real stateAlpha: {
-        if (root.localActive || root.pressed) return 1.0
+        // An urgent entry sits at the top of the ladder whether or not it is
+        // running: its glyph carries the colour, so the label has to stay at
+        // full brightness to be worth reading.
+        if (root.urgent) return 1.0
+        // Press dips rather than sharing the focused rung. Clicking the
+        // application you are already on used to produce no feedback at all,
+        // because focused and pressed were the same value.
+        if (root.pressed) return 0.72
+        if (root.localActive) return 1.0
         if (root.running) return root.hovered ? 0.85 : 0.62
         return root.hovered ? 0.62 : 0.32
     }
 
     // Not readonly: Behavior has to intercept the binding's writes to ease them.
-    property color itemColor: root.urgent
-        ? Color.urgent : Util.alpha(Color.bar.text, root.stateAlpha)
+    property color itemColor: Util.alpha(Color.bar.text, root.stateAlpha)
+
+    // Urgent is carried by the glyph and the marker, not by the label. Repainting
+    // the label too dropped a red word into a row of readable ones, which is
+    // harder to read and no more noticeable against this palette.
+    property color glyphColor: root.urgent ? Color.urgent : root.itemColor
 
     Behavior on itemColor {
+        ColorAnimation { duration: 120; easing.type: Easing.OutCubic }
+    }
+
+    Behavior on glyphColor {
         ColorAnimation { duration: 120; easing.type: Easing.OutCubic }
     }
 
@@ -121,10 +137,11 @@ Item {
         }
 
         DockIcon {
+            id: glyphIcon
             anchors.verticalCenter: parent.verticalCenter
             itemRecord: root.itemRecord
             glyphSize: root.glyphSize
-            tint: root.itemColor
+            tint: root.glyphColor
             useCuratedGlyphs: root.configuration.appearance
                 && root.configuration.appearance.usePixelGlyphs !== false
         }
@@ -154,9 +171,25 @@ Item {
     DotMatrix {
         id: marker
         visible: root.running
-        anchors.horizontalCenter: parent.horizontalCenter
+        // Centred on the glyph rather than on the item: the item is as wide as
+        // its label, so on a long one the rule drifted out from under the mark it
+        // belongs to and the strip lost its baseline. The glyph is not a sibling
+        // (it lives inside the row), so this is an x rather than an anchor, and
+        // it stays correct when showSlotNumbers puts a number ahead of it.
+        x: itemRow.x + glyphIcon.x + glyphIcon.width / 2 - width / 2
         anchors.bottom: parent.bottom
-        anchors.bottomMargin: Style.space(3)
+        // The rule is the next row of the glyph's own matrix: one pitch below its
+        // last row, which puts exactly the matrix's own gutter between them. The
+        // old 3px margin was off the pitch entirely and left the two flush.
+        //
+        // A full dark row of separation was tried first and is wrong -- it sinks
+        // the rule into the dither gathered along the bottom edge, where a
+        // running application's rule at 0.32 stops being legible at all.
+        // Clamped so the extreme icon sizes cannot push it out through the
+        // surface below.
+        anchors.bottomMargin: Math.max(
+            -(root.metrics.contentPadding - 1),
+            Math.round((root.itemHeight - root.glyphSize) / 2) - root.markerPitch)
         pitch: root.markerPitch
         rows: 1
         columns: root.markerDots
@@ -260,6 +293,9 @@ Item {
     DockTooltip {
         targetItem: root
         targetWindow: root.dockWindow
+        // The item's top edge is contentPadding inside the surface, so a tooltip
+        // placed flush to it sits on the dock's own rounded corner.
+        clearance: root.metrics.contentPadding + Style.space(4)
         visible: root.hovered && !root.labelVisible && root.showLabels !== "never"
             && !root.contextMenuOpen
         label: {

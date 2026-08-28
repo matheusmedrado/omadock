@@ -8,6 +8,10 @@ PopupWindow {
     property Item targetItem
     property var targetWindow
     property string label: ""
+    // Vertical gap between the tooltip and the item it points at. The item sits
+    // inside the dock's content padding, so without this the tooltip lands on
+    // the surface rather than above it.
+    property int clearance: 0
 
     visible: false
     color: "transparent"
@@ -25,7 +29,8 @@ PopupWindow {
     anchor.rect.y: {
         if (!root.targetItem || !root.targetWindow || !root.targetWindow.contentItem
                 || !root.targetWindow.backingWindowVisible) return 0
-        return root.targetWindow.contentItem.mapFromItem(root.targetItem, 0, 0).y - height
+        return root.targetWindow.contentItem.mapFromItem(root.targetItem, 0, 0).y
+            - height - root.clearance
     }
 
     Rectangle {
