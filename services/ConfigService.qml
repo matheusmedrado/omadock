@@ -86,9 +86,20 @@ Item {
 
     function writePending() {
         if (pendingText === null || writing) return
-        writing = true
-        fileView.setText(pendingText)
+
+        // Take the pending text *before* handing it to setText. A FileView save
+        // can complete synchronously -- a write whose content matches what is
+        // already on disk does -- and onSaved calls straight back into here.
+        // Clearing pendingText afterwards meant that re-entry saw the same text
+        // still queued and wrote it again, recursing until the stack was
+        // exhausted. The RangeError unwound the handler with `writing` left
+        // true, so the service never wrote anything again: every later change
+        // from the bar widget's panel updated its own control and then silently
+        // did nothing, until the shell was restarted.
+        var text = pendingText
         pendingText = null
+        writing = true
+        fileView.setText(text)
     }
 
     function persist(configuration, original) {

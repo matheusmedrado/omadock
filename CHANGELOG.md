@@ -39,6 +39,16 @@ All notable changes to OmaDock are documented here.
 
 ### Fixed
 
+- Settings changed in the bar widget's preferences panel apply again. Saving the
+  configuration queued the text to write, handed it to the file view, and only
+  then cleared the queue -- but a save whose content matches what is already on
+  disk completes synchronously, and its completion handler calls straight back
+  into the writer. That re-entry found the same text still queued and wrote it
+  again, recursing until the stack was exhausted. The resulting error unwound the
+  handler with the writer still marked busy, so nothing was ever written again:
+  every later change moved its own control in the panel and then silently did
+  nothing until the shell was restarted. The queue is now taken before the write
+  rather than after it.
 - A hover tooltip no longer overlaps the top edge of the dock. It was placed
   flush to the item it points at, and an item sits inside the surface's content
   padding, so the tooltip landed on the dock's own rounded corner.
