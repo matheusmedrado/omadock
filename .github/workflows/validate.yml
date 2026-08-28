@@ -1,7 +1,11 @@
 name: Validate
 
+# Pull requests are the only route into main, so a branch build would just run
+# the same commit twice and report two identical `static` checks on every pull
+# request. Push builds are kept for main itself, which is what users track.
 on:
   push:
+    branches: [main]
   pull_request:
 
 permissions:

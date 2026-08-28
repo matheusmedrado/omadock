@@ -17,7 +17,8 @@ jq -e . manifest.json >/dev/null || fail "manifest.json is not valid JSON"
 jq -e . config/defaults.json >/dev/null || fail "config/defaults.json is not valid JSON"
 
 manifest_version=$(jq -er '.version' manifest.json) || fail "manifest version is missing"
-changelog_version=$(sed -n 's/^## \[\([^]]*\)\].*/\1/p' CHANGELOG.md | head -n 1)
+changelog_version=$(sed -n 's/^## \[\([^]]*\)\].*/\1/p' CHANGELOG.md \
+    | grep -v '^Unreleased$' | head -n 1 || true)
 [ -n "$changelog_version" ] || fail "changelog version is missing"
 [ "$manifest_version" = "$changelog_version" ] \
     || fail "manifest version does not match the latest changelog version"
