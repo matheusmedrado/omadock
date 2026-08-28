@@ -58,9 +58,17 @@ All notable changes to OmaDock are documented here.
   service from saving anything or noticing any external edit. A write that goes
   unanswered is now treated as lost, and the queue is retried.
 
-- A hover tooltip no longer overlaps the top edge of the dock. It was placed
-  flush to the item it points at, and an item sits inside the surface's content
-  padding, so the tooltip landed on the dock's own rounded corner.
+### Removed
+
+- The hover tooltip, which no configuration could display. `showLabels` takes
+  one of three values, and the tooltip was drawn only while an item was hovered
+  and its label hidden: `always` and `hover` both make the label visible under
+  the pointer, and `never` was excluded outright, so none of the six
+  combinations reached it. It had been unreachable since `showLabels` was
+  introduced -- the inline label that feature added replaced it, and the
+  component was left behind. A previous entry here claimed the tooltip's
+  position was corrected; nothing observable changed, because nothing was ever
+  drawn.
 
 ## [0.1.1] - 2026-08-28
 
