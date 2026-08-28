@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "id": "io.github.matheusmedrado.omadock",
   "name": "OmaDock",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "author": "matheusmedrado",
   "license": "MIT",
   "description": "A fast, terminal-inspired application dock for Omarchy Quattro.",

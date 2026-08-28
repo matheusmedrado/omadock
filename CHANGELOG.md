@@ -2,7 +2,7 @@
 
 All notable changes to OmaDock are documented here.
 
-## [Unreleased]
+## [0.1.1] - 2026-08-28
 
 ### Fixed
 
