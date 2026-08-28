@@ -99,6 +99,7 @@ Item {
         var text = pendingText
         pendingText = null
         writing = true
+        writeWatchdog.restart()
         fileView.setText(text)
     }
 
@@ -209,12 +210,32 @@ Item {
         }
 
         onSaved: {
+            writeWatchdog.stop()
             root.writing = false
             root.writePending()
         }
         onSaveFailed: {
+            writeWatchdog.stop()
             root.writing = false
             root.reportError("could not write config.json; keeping settings in memory")
+        }
+    }
+
+    // A FileView operation that gets superseded is dropped, and a dropped
+    // operation never reports back -- Quickshell logs "got operation finished
+    // from dropped operation" and neither saved nor saveFailed is emitted. The
+    // `writing` flag it left behind is checked by both writePending() and the
+    // file watcher, so one dropped write silently froze the service for the life
+    // of the process: no setting written, no external change picked up, until
+    // the shell was restarted. Treat silence as a lost write and recover.
+    Timer {
+        id: writeWatchdog
+        interval: 2000
+        repeat: false
+        onTriggered: {
+            if (!root.writing) return
+            root.writing = false
+            root.writePending()
         }
     }
 
