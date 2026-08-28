@@ -42,7 +42,7 @@ function defaultConfig() {
             showLabels: "always",
             showPrompt: true,
             showDither: true,
-            ditherCell: 2,
+            ditherCell: 3,
             usePixelGlyphs: true,
             backgroundOpacity: 1.0
         },

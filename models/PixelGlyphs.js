@@ -213,3 +213,13 @@ function ruleCells(count) {
     for (var column = 0; column < total; column += 1) cells.push({ row: 0, column: column })
     return cells
 }
+
+// A vertical run of dots. The group divider and the drag insertion marker were
+// both solid shapes drawn straight into the strip; this is what puts them on the
+// same matrix as everything else.
+function columnCells(count) {
+    var cells = []
+    var total = Math.max(0, Math.floor(Number(count) || 0))
+    for (var row = 0; row < total; row += 1) cells.push({ row: row, column: 0 })
+    return cells
+}

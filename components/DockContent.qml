@@ -35,6 +35,9 @@ Item {
         && configuration.appearance.showDither !== false
     readonly property int ditherCell: metrics.ditherCell
     readonly property int glyphSize: metrics.glyphSize
+    // The matrix everything in the strip is drawn on. DockItem's marker derives
+    // the same pitch, so a change here has to move with it.
+    readonly property int matrixPitch: Math.max(2, Math.floor(root.glyphSize / PixelGlyphs.SIZE))
     // Items carry their own label, so the strip is measured from what the row
     // actually lays out rather than from a fixed per-item width.
     readonly property real rowWidth: dockRow.implicitWidth
@@ -176,8 +179,8 @@ Item {
     readonly property real insertionMarkerX: {
         if (root.dragTargetIndex < 0) return -100
         var target = root.pinnedItemAtDestination(root.dragTargetIndex)
-        if (target) return dockRow.x + target.x - root.gap / 2 - 1.5
-        return root.pinnedEndX() - root.gap / 2 - 1.5
+        if (target) return dockRow.x + target.x - root.gap / 2 - root.matrixPitch / 2
+        return root.pinnedEndX() - root.gap / 2 - root.matrixPitch / 2
     }
 
     // One surface for the whole strip. Individual items are unbordered so the
@@ -209,11 +212,13 @@ Item {
                 cell: root.ditherCell
                 tint: Color.bar.text
                 topCoverage: 0.0
-                bottomCoverage: 0.42
+                bottomCoverage: 0.38
                 // Bias the ramp hard so the strip stays clear behind the labels
-                // and the texture only gathers along the bottom edge.
-                gamma: 3.4
-                opacity: 0.11
+                // and the texture only gathers along the bottom edge. Pulled back
+                // from 0.42/3.4 when the default cell went to 3: a bigger cell
+                // carries more weight at the same coverage.
+                gamma: 3.0
+                opacity: 0.13
             }
         }
     }
@@ -251,7 +256,10 @@ Item {
                 columns: PixelGlyphs.SIZE
                 rows: PixelGlyphs.SIZE
                 pitch: Math.max(2, Math.floor(root.glyphSize / PixelGlyphs.SIZE) - 1)
-                tint: Color.accent
+                // Punctuation, not a fourth entry: at full accent the prompt is
+                // the most saturated mark on the strip and competes with the
+                // focused entry's rule, which is the only other accent there is.
+                tint: Util.alpha(Color.accent, 0.75)
             }
         }
 
@@ -271,13 +279,17 @@ Item {
                     readonly property bool startsRunningGroup: !modelData.pinned
                         && index === root.pinnedCount && index > 0
 
-                    Text {
+                    // The group break was a text pipe, the one mark in the
+                    // strip not made of dots. On the glyph pitch it says the
+                    // same thing in the same voice.
+                    DotMatrix {
                         anchors.verticalCenter: parent.verticalCenter
                         visible: slot.startsRunningGroup
-                        text: "│"
-                        color: Util.alpha(Color.bar.text, 0.3)
-                        font.family: Style.font.family
-                        font.pixelSize: Style.font.bodySmall
+                        cells: PixelGlyphs.columnCells(5)
+                        columns: 1
+                        rows: 5
+                        pitch: root.matrixPitch
+                        tint: Util.alpha(Color.bar.text, 0.3)
                     }
 
                     DockItem {
@@ -297,14 +309,18 @@ Item {
         }
     }
 
-    Rectangle {
+    // Where the release lands. A solid rounded bar reads as borrowed from a
+    // different kind of dock; on the pitch the gesture stays inside the language.
+    DotMatrix {
+        readonly property int span: root.itemHeight + Style.space(4)
         visible: root.dragActive && root.dragTargetIndex >= 0
         x: root.insertionMarkerX
         y: dockRow.y - Style.space(4)
-        width: 3
-        height: root.itemHeight + Style.space(4)
-        radius: width / 2
-        color: Color.accent
+        cells: PixelGlyphs.columnCells(rows)
+        columns: 1
+        rows: Math.max(3, Math.round(span / root.matrixPitch))
+        pitch: root.matrixPitch
+        tint: Color.accent
     }
 
     Shortcut {
