@@ -290,22 +290,6 @@ Item {
 
     onHoveredChanged: if (!root.hovered) root.wheelAccumulator = 0
 
-    DockTooltip {
-        targetItem: root
-        targetWindow: root.dockWindow
-        // The item's top edge is contentPadding inside the surface, so a tooltip
-        // placed flush to it sits on the dock's own rounded corner.
-        clearance: root.metrics.contentPadding + Style.space(4)
-        visible: root.hovered && !root.labelVisible && root.showLabels !== "never"
-            && !root.contextMenuOpen
-        label: {
-            var count = root.itemRecord.windowCount || 0
-            var suffix = count > 1 ? "  " + count + "x" : ""
-            return (root.slotLabel !== "" ? root.slotLabel + "  " : "")
-                + root.commandLabel + suffix
-        }
-    }
-
     DockContextMenu {
         targetItem: root
         targetWindow: root.dockWindow
