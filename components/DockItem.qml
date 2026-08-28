@@ -45,6 +45,7 @@ Item {
     readonly property int itemHeight: metrics.itemHeight
     readonly property int glyphSize: metrics.glyphSize
     readonly property int itemPadding: metrics.itemPadding
+    readonly property int labelRevealMs: DockModel.labelRevealMs(configuration)
     // The marker sits on the glyph pitch so its dots line up with the matrix
     // above them.
     readonly property int markerPitch: Math.max(2, Math.floor(metrics.glyphSize / 7))
@@ -125,11 +126,16 @@ Item {
     Row {
         id: itemRow
         anchors.centerIn: parent
-        spacing: Style.space(6)
+        // The gaps are carried by the children rather than by the row. The hover
+        // label animates its own width down to nothing, and a row spacing would
+        // survive that and leave its gap behind as dead space beside a label
+        // that is no longer there.
+        spacing: 0
 
         Text {
             anchors.verticalCenter: parent.verticalCenter
             visible: root.showSlotNumbers && root.slotLabel !== ""
+            rightPadding: Style.space(6)
             text: root.slotLabel
             color: Util.alpha(root.itemColor, 0.55)
             font.family: Style.font.family
@@ -146,18 +152,52 @@ Item {
                 && root.configuration.appearance.usePixelGlyphs !== false
         }
 
-        DockLabel {
+        // On hover the label used to appear at its full width in one frame, which
+        // pushed every entry after it sideways in the same frame. Reading the
+        // strip meant crossing several entries, so a single sweep re-laid the row
+        // out once per entry and the whole thing juddered under the pointer.
+        //
+        // Opening the slot over time fixes more than the jitter: crossing from
+        // one entry to the next now closes one label while it opens the other, so
+        // the row's total width barely moves and its neighbours hold still.
+        Item {
+            id: labelSlot
             anchors.verticalCenter: parent.verticalCenter
-            visible: root.labelVisible
-            text: root.commandLabel
-            color: root.itemColor
-            font.family: Style.font.family
-            font.pixelSize: Style.font.bodySmall
+            visible: root.showLabels !== "never"
+            clip: true
+            implicitHeight: label.implicitHeight
+            width: root.labelVisible ? Style.space(6) + label.implicitWidth : 0
+
+            Behavior on width {
+                NumberAnimation {
+                    duration: root.labelRevealMs
+                    easing.type: Easing.OutCubic
+                }
+            }
+
+            DockLabel {
+                id: label
+                x: Style.space(6)
+                anchors.verticalCenter: parent.verticalCenter
+                text: root.commandLabel
+                color: root.itemColor
+                font.family: Style.font.family
+                font.pixelSize: Style.font.bodySmall
+                opacity: root.labelVisible ? 1 : 0
+
+                Behavior on opacity {
+                    NumberAnimation {
+                        duration: root.labelRevealMs
+                        easing.type: Easing.OutCubic
+                    }
+                }
+            }
         }
 
         Text {
             anchors.verticalCenter: parent.verticalCenter
             visible: root.countLabel !== ""
+            leftPadding: Style.space(6)
             text: root.countLabel
             color: Util.alpha(root.itemColor, 0.6)
             font.family: Style.font.family
@@ -178,18 +218,21 @@ Item {
         // it stays correct when showSlotNumbers puts a number ahead of it.
         x: itemRow.x + glyphIcon.x + glyphIcon.width / 2 - width / 2
         anchors.bottom: parent.bottom
-        // The rule is the next row of the glyph's own matrix: one pitch below its
-        // last row, which puts exactly the matrix's own gutter between them. The
-        // old 3px margin was off the pitch entirely and left the two flush.
+        // A cell and a half below the glyph's last row. Deliberately off the
+        // matrix, and the only mark here that is: a single cell puts the
+        // matrix's own gutter between them, which is the right amount *inside* a
+        // glyph and too tight between two separate marks -- the rule reads as
+        // another row of the glyph rather than as a thing beneath it. Two cells
+        // is on the grid again but sinks the rule toward the dither gathered
+        // along the bottom edge, where a running application's rule at 0.32 has
+        // to stay legible. Half a cell is the difference between the two.
         //
-        // A full dark row of separation was tried first and is wrong -- it sinks
-        // the rule into the dither gathered along the bottom edge, where a
-        // running application's rule at 0.32 stops being legible at all.
         // Clamped so the extreme icon sizes cannot push it out through the
         // surface below.
         anchors.bottomMargin: Math.max(
             -(root.metrics.contentPadding - 1),
-            Math.round((root.itemHeight - root.glyphSize) / 2) - root.markerPitch)
+            Math.round((root.itemHeight - root.glyphSize) / 2)
+                - Math.round(root.markerPitch * 1.5))
         pitch: root.markerPitch
         rows: 1
         columns: root.markerDots

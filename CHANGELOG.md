@@ -12,14 +12,31 @@ All notable changes to OmaDock are documented here.
 
 ### Changed
 
+- The bar widget's icon is the prompt caret from the dock's own strip, drawn on
+  a five-cell matrix. A dot is three quarters of its pitch, and the bar renders
+  its icon at roughly a third of a dock glyph -- on the seven-cell matrix that
+  rounded the dot up to the full cell, so the gutters closed, the dots met, and
+  the icon read as a solid shape rather than as the dot matrix everything else
+  in the plugin is drawn on. Five cells leave room for a gutter at the size the
+  bar actually renders.
+- A hover label opens and closes over `behavior.animationMs` instead of
+  appearing in a single frame. It used to arrive at full width immediately,
+  which pushed every entry after it sideways in that same frame, so reading
+  along the strip re-laid the row out once per entry and the whole thing
+  juddered under the pointer. Crossing from one entry to the next now closes one
+  label while it opens the other, so the row's total width barely moves and its
+  neighbours hold still. Setting `animationMs` to 0 keeps the old instant
+  behaviour.
 - The running marker sits under the application glyph instead of under the
   middle of the entry. An entry is as wide as its label, so on a long one the
   rule drifted out from under the mark it belongs to and the strip lost its
   baseline.
-- The running marker sits on the glyph's own matrix, one pitch below its last
-  row, so the two are separated by the same gutter the matrix uses everywhere
-  else. The margin was three pixels against a four-pixel pitch, which left the
-  run's dots flush against the glyph with no gutter at all.
+- The running marker sits a cell and a half below the glyph's last row. Its
+  margin was three pixels against a four-pixel pitch, which left the run's dots
+  flush against the glyph with no gutter at all. A single cell puts the matrix's
+  own gutter between them, which is the right amount inside a glyph and too
+  tight between two separate marks; two cells is on the grid again but sinks the
+  rule toward the dithered bottom edge, where it still has to be legible.
 - The break between pinned and running-unpinned applications is a column of
   dots rather than a text pipe, and the drag insertion marker is a column of
   dots rather than a solid rounded bar. Both were the only marks in the strip

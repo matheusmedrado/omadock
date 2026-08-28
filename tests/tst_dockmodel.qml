@@ -195,4 +195,15 @@ TestCase {
             [makeItem({}), makeItem({ key: "desktop:other" })]
         ))
     }
+
+    function test_labelRevealRidesTheAnimationDuration() {
+        compare(DockModel.labelRevealMs({ behavior: { animationMs: 240 } }), 240)
+        // Motion turned off silences the label as well.
+        compare(DockModel.labelRevealMs({ behavior: { animationMs: 0 } }), 0)
+        // Same bounds the configuration validator applies.
+        compare(DockModel.labelRevealMs({ behavior: { animationMs: 5000 } }), 500)
+        compare(DockModel.labelRevealMs({ behavior: { animationMs: -20 } }), 0)
+        compare(DockModel.labelRevealMs({}), 160)
+        compare(DockModel.labelRevealMs(undefined), 160)
+    }
 }

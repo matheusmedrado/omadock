@@ -246,10 +246,14 @@ Panel {
             Item {
                 DotMatrix {
                     anchors.centerIn: parent
-                    cells: PixelGlyphs.cellsFor("dock")
-                    columns: PixelGlyphs.SIZE
-                    rows: PixelGlyphs.SIZE
-                    pitch: Math.max(2, Math.round(Style.space(12) / PixelGlyphs.SIZE))
+                    cells: PixelGlyphs.barCellsFor("prompt")
+                    columns: PixelGlyphs.BAR_SIZE
+                    rows: PixelGlyphs.BAR_SIZE
+                    // Floored at three rather than scaled freely with the bar's
+                    // spacing: a dot is three quarters of the pitch, so a pitch
+                    // of two rounds the dot up to the full cell and the matrix
+                    // fills in solid.
+                    pitch: Math.max(3, Math.round(Style.space(15) / PixelGlyphs.BAR_SIZE))
                     tint: root.barForeground
                 }
             }
