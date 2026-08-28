@@ -76,4 +76,123 @@ TestCase {
         compare(DockModel.fallbackGlyph("Ghostty!", "fallback"), "GH")
         compare(DockModel.fallbackGlyph("", "??"), "?")
     }
+
+    function makeWindow(overrides) {
+        var window = {
+            key: "0x1",
+            active: true,
+            monitorName: "DP-1",
+            screenNames: ["DP-1"],
+            toplevel: null,
+            geometry: { x: 0, y: 0, width: 800, height: 600 }
+        }
+        for (var key in overrides) window[key] = overrides[key]
+        return window
+    }
+
+    function makeItem(overrides) {
+        var item = {
+            key: "desktop:ghostty",
+            desktopId: "ghostty",
+            appId: "com.mitchellh.ghostty",
+            name: "Ghostty",
+            shortLabel: "GHOSTTY",
+            icon: "ghostty",
+            iconSource: "",
+            categories: "System;TerminalEmulator;",
+            pinned: true,
+            missing: false,
+            running: true,
+            active: true,
+            urgent: false,
+            windowCount: 1,
+            windows: [makeWindow({})],
+            slot: 1
+        }
+        for (var key in overrides) item[key] = overrides[key]
+        return item
+    }
+
+    function test_identicalItemsCompareEqual() {
+        verify(DockModel.sameItems([makeItem({})], [makeItem({})]))
+        verify(DockModel.sameItems([], []))
+    }
+
+    function test_itemFieldChangesAreChanges() {
+        var fields = {
+            key: "desktop:other",
+            desktopId: "other",
+            appId: "other",
+            name: "Other",
+            shortLabel: "OTHER",
+            icon: "other",
+            iconSource: "file:///other",
+            categories: "Utility;",
+            pinned: false,
+            missing: true,
+            running: false,
+            active: false,
+            urgent: true,
+            windowCount: 2,
+            slot: 2
+        }
+        for (var field in fields) {
+            var overrides = {}
+            overrides[field] = fields[field]
+            verify(!DockModel.sameItems([makeItem({})], [makeItem(overrides)]),
+                   "expected a change in " + field + " to be reported")
+        }
+    }
+
+    // Moving or resizing a window changes its geometry on every frame, and none
+    // of it changes what the strip draws. Letting it through would rebuild every
+    // delegate for the length of the drag.
+    function test_windowGeometryDoesNotChangeTheStrip() {
+        verify(DockModel.sameItems(
+            [makeItem({})],
+            [makeItem({ windows: [makeWindow({
+                geometry: { x: 40, y: 40, width: 1200, height: 900 }
+            })] })]
+        ))
+    }
+
+    function test_consumedWindowFieldsAreChanges() {
+        var fields = {
+            key: "0x2",
+            active: false,
+            monitorName: "HDMI-1",
+            toplevel: { id: "replaced" }
+        }
+        for (var field in fields) {
+            var overrides = {}
+            overrides[field] = fields[field]
+            verify(!DockModel.sameItems(
+                [makeItem({})],
+                [makeItem({ windows: [makeWindow(overrides)] })]
+            ), "expected a change in window " + field + " to be reported")
+        }
+        verify(!DockModel.sameItems(
+            [makeItem({})],
+            [makeItem({ windows: [makeWindow({ screenNames: ["HDMI-1"] })] })]
+        ))
+    }
+
+    // Cycling steps through the window list in order, so the same windows in a
+    // different order is a different item.
+    function test_windowOrderIsCompared() {
+        var first = makeWindow({ key: "0x1" })
+        var second = makeWindow({ key: "0x2", active: false })
+        verify(!DockModel.sameItems(
+            [makeItem({ windows: [first, second], windowCount: 2 })],
+            [makeItem({ windows: [second, first], windowCount: 2 })]
+        ))
+    }
+
+    function test_itemListLengthIsCompared() {
+        verify(!DockModel.sameItems([makeItem({})], []))
+        verify(!DockModel.sameItems(
+            [makeItem({})],
+            [makeItem({}), makeItem({ key: "desktop:other" })]
+        ))
+    }
 }

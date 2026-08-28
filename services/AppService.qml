@@ -2,6 +2,7 @@ import QtQuick
 import Quickshell
 import "../models/AppMatcher.js" as AppMatcher
 import "../models/ActionModel.js" as ActionModel
+import "../models/DockModel.js" as DockModel
 
 Item {
     id: root
@@ -185,6 +186,10 @@ Item {
             }
         }
 
+        // A rebuild that lands on the same strip must not republish, or every
+        // delegate is destroyed and recreated for nothing -- which is what a
+        // hover, a tooltip, and a drag are lost to.
+        if (DockModel.sameItems(items, nextItems)) return
         items = nextItems
     }
 

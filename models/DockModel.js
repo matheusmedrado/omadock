@@ -85,3 +85,79 @@ function fallbackGlyph(label, fallback) {
         .toUpperCase().replace(/[^A-Z0-9]/g, "")
     return value.slice(0, 2) || "?"
 }
+
+// Whether two item lists would draw the same strip.
+//
+// The strip's Repeater is backed by a plain JavaScript array, which QML cannot
+// diff: assigning a new one destroys and recreates every delegate, taking the
+// hover state, the colour easing, any open tooltip, and any drag in progress
+// with it. Items are rebuilt from scratch whenever the windows, the pinned
+// list, or the desktop entries change, so the new array is never the same
+// object as the old one and the list has to be compared by value to tell a real
+// change from a rebuild that landed on the same answer.
+var COMPARED_ITEM_FIELDS = [
+    "key", "desktopId", "appId", "name", "shortLabel", "icon", "iconSource",
+    "categories", "pinned", "missing", "running", "active", "urgent",
+    "windowCount", "slot"
+]
+
+// An item carries whole window records, but it only ever reads a handful of
+// fields off them: which window is active, where it lives, and the handle an
+// action is performed through. Everything else on a record -- geometry,
+// workspace, floating, the maximise and minimise flags -- exists for Smart
+// Hide, which reads the records directly.
+//
+// Comparing only what the strip consumes is what keeps a window being dragged
+// or resized from rebuilding every dock item on the way: that moves geometry on
+// every frame, and none of it changes a glyph, a label, or a marker.
+var COMPARED_WINDOW_FIELDS = ["key", "active", "monitorName", "toplevel"]
+
+function sameNameList(first, second) {
+    var left = toArray(first)
+    var right = toArray(second)
+    if (left.length !== right.length) return false
+    for (var index = 0; index < left.length; index += 1) {
+        if (String(left[index]) !== String(right[index])) return false
+    }
+    return true
+}
+
+function sameWindow(first, second) {
+    if (!first || !second) return !first && !second
+    for (var index = 0; index < COMPARED_WINDOW_FIELDS.length; index += 1) {
+        var field = COMPARED_WINDOW_FIELDS[index]
+        if (first[field] !== second[field]) return false
+    }
+    return sameNameList(first.screenNames, second.screenNames)
+}
+
+// Order matters: cycling steps through this list, so two lists holding the same
+// windows in a different order do not behave the same.
+function sameWindowList(first, second) {
+    var left = toArray(first)
+    var right = toArray(second)
+    if (left.length !== right.length) return false
+    for (var index = 0; index < left.length; index += 1) {
+        if (!sameWindow(left[index], right[index])) return false
+    }
+    return true
+}
+
+function sameItem(first, second) {
+    if (!first || !second) return !first && !second
+    for (var index = 0; index < COMPARED_ITEM_FIELDS.length; index += 1) {
+        var field = COMPARED_ITEM_FIELDS[index]
+        if (first[field] !== second[field]) return false
+    }
+    return sameWindowList(first.windows, second.windows)
+}
+
+function sameItems(first, second) {
+    var left = toArray(first)
+    var right = toArray(second)
+    if (left.length !== right.length) return false
+    for (var index = 0; index < left.length; index += 1) {
+        if (!sameItem(left[index], right[index])) return false
+    }
+    return true
+}
