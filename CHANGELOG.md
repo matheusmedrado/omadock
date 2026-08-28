@@ -39,6 +39,25 @@ All notable changes to OmaDock are documented here.
 
 ### Fixed
 
+- Settings changed in the bar widget's preferences panel apply again. Two
+  faults in the configuration writer combined to freeze it for the life of the
+  process, so a change moved its own control and then did nothing, for every
+  setting, until the shell was restarted.
+
+  The writer queued the serialised configuration, handed it to the file view,
+  and only then cleared the queue -- but a save whose content matches what is
+  already on disk completes synchronously, and its completion handler calls
+  straight back into the writer. That re-entry found the same text still queued
+  and wrote it again, recursing until the stack was exhausted. The queue is now
+  taken before the write rather than after it.
+
+  The storm of overlapping writes that caused also made the file view drop
+  operations, and a dropped operation never reports back: neither completion nor
+  failure is emitted. The busy flag it left behind is checked both before
+  writing and before re-reading the file, so a single lost write stopped the
+  service from saving anything or noticing any external edit. A write that goes
+  unanswered is now treated as lost, and the queue is retried.
+
 - A hover tooltip no longer overlaps the top edge of the dock. It was placed
   flush to the item it points at, and an item sits inside the surface's content
   padding, so the tooltip landed on the dock's own rounded corner.

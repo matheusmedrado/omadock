@@ -86,9 +86,21 @@ Item {
 
     function writePending() {
         if (pendingText === null || writing) return
-        writing = true
-        fileView.setText(pendingText)
+
+        // Take the pending text *before* handing it to setText. A FileView save
+        // can complete synchronously -- a write whose content matches what is
+        // already on disk does -- and onSaved calls straight back into here.
+        // Clearing pendingText afterwards meant that re-entry saw the same text
+        // still queued and wrote it again, recursing until the stack was
+        // exhausted. The RangeError unwound the handler with `writing` left
+        // true, so the service never wrote anything again: every later change
+        // from the bar widget's panel updated its own control and then silently
+        // did nothing, until the shell was restarted.
+        var text = pendingText
         pendingText = null
+        writing = true
+        writeWatchdog.restart()
+        fileView.setText(text)
     }
 
     function persist(configuration, original) {
@@ -198,12 +210,32 @@ Item {
         }
 
         onSaved: {
+            writeWatchdog.stop()
             root.writing = false
             root.writePending()
         }
         onSaveFailed: {
+            writeWatchdog.stop()
             root.writing = false
             root.reportError("could not write config.json; keeping settings in memory")
+        }
+    }
+
+    // A FileView operation that gets superseded is dropped, and a dropped
+    // operation never reports back -- Quickshell logs "got operation finished
+    // from dropped operation" and neither saved nor saveFailed is emitted. The
+    // `writing` flag it left behind is checked by both writePending() and the
+    // file watcher, so one dropped write silently froze the service for the life
+    // of the process: no setting written, no external change picked up, until
+    // the shell was restarted. Treat silence as a lost write and recover.
+    Timer {
+        id: writeWatchdog
+        interval: 2000
+        repeat: false
+        onTriggered: {
+            if (!root.writing) return
+            root.writing = false
+            root.writePending()
         }
     }
 
