@@ -26,8 +26,39 @@ var EXACT = {
     "obsidian": "notes",
     "spotify": "music",
     "steam": "game",
-    "code": "code",
     "org.gnome.texteditor": "notes"
+}
+
+// Applications that draw as their own monogram rather than as the category they
+// belong to. The semantic glyphs answer "what kind of thing is this", which is
+// the right question until several of one kind sit in the strip together: eight
+// installed applications resolve to the code glyph and four to chat, and a row
+// of identical marks is a row you have to read the labels off.
+//
+// Only a brand that reduces to a letterform or a simple geometric primitive is
+// eligible, because that is all that survives a seven-dot grid -- see the note
+// above the artwork in PixelGlyphs for what happened to the ones that do not.
+// An application with no entry here keeps its semantic glyph, which is a better
+// mark than a blurred logo.
+//
+// Matched on the exact id, never as a substring: "zed" inside another id or
+// name is a coincidence, not Zed. Both the desktop id and the window app id are
+// tried, so an application resolves the same whether it is pinned or running.
+var VENDOR = {
+    "dev.zed.zed": "zed",
+    "zed": "zed",
+    "code": "vscode",
+    "code-oss": "vscode",
+    "visual-studio-code": "vscode",
+    "com.visualstudio.code": "vscode",
+    "nvim": "neovim",
+    "neovim": "neovim",
+    "cursor": "cursor",
+    "co.anysphere.cursor": "cursor",
+    "slack": "slack",
+    "com.slack.slack": "slack",
+    "discord": "discord",
+    "com.discordapp.discord": "discord"
 }
 
 // Hosts a web application opens, and what that makes it. Omarchy's
@@ -211,9 +242,15 @@ function normalize(value) {
     return text.slice(-8) === ".desktop" ? text.slice(0, -8) : text
 }
 
+// A vendor monogram outranks the semantic override, which is the whole point of
+// having one: `code` used to resolve to the generic bracket glyph it shared with
+// seven other applications.
 function exactGlyph(value) {
     var key = normalize(value)
     if (!key) return ""
+    for (var vendorId in VENDOR) {
+        if (normalize(vendorId) === key) return VENDOR[vendorId]
+    }
     for (var candidate in EXACT) {
         if (normalize(candidate) === key) return EXACT[candidate]
     }
