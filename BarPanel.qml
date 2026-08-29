@@ -187,6 +187,9 @@ Panel {
     }
 
     component RangeRow: Item {
+        // The Flickable this row scrolls, passed in rather than looked up: an
+        // inline component has no access to the ids of the document around it.
+        property Item scroller: null
         property string label: ""
         property real value: 0
         property real minimum: 0
@@ -232,6 +235,35 @@ Panel {
             value: parent.value
             onMoved: function(next) { parent.moved(next) }
         }
+
+        // The shared PanelSlider takes every wheel event to change its own
+        // value and never lets one reach the Flickable underneath, so scrolling
+        // the panel with a wheel or a trackpad changed whatever setting the
+        // pointer happened to cross on the way past. There are five sliders in a
+        // panel that scrolls, so crossing one is the normal case rather than the
+        // unlucky one, and the value was committed before you could see it move.
+        //
+        // This sits above the slider and turns the wheel back into a scroll. It
+        // accepts no buttons, so pressing and dragging still fall through to the
+        // slider -- dragging remains the way to change a value -- and it leaves
+        // hover alone, so the knob still lights under the pointer.
+        MouseArea {
+            anchors.fill: slider
+            acceptedButtons: Qt.NoButton
+            onWheel: function(wheel) {
+                var target = parent.scroller
+                if (!target || target.contentHeight <= target.height) return
+
+                // A trackpad sends pixels and a wheel sends eighths of a degree;
+                // taking pixelDelta when it is there is what keeps a trackpad
+                // from moving the panel in notch-sized jumps.
+                var pixels = wheel.pixelDelta.y !== 0
+                    ? wheel.pixelDelta.y
+                    : wheel.angleDelta.y / 120 * Style.space(56)
+                var limit = target.contentHeight - target.height
+                target.contentY = Math.max(0, Math.min(limit, target.contentY - pixels))
+            }
+        }
     }
 
     // ---------------------------------------------------------------- bar
@@ -250,10 +282,22 @@ Panel {
                     columns: PixelGlyphs.BAR_SIZE
                     rows: PixelGlyphs.BAR_SIZE
                     // Floored at three rather than scaled freely with the bar's
-                    // spacing: a dot is three quarters of the pitch, so a pitch
-                    // of two rounds the dot up to the full cell and the matrix
+                    // spacing: a dot is a fraction of the pitch, so too small a
+                    // pitch rounds the dot up to the full cell and the matrix
                     // fills in solid.
-                    pitch: Math.max(3, Math.round(Style.space(15) / PixelGlyphs.BAR_SIZE))
+                    //
+                    // Twelve rather than fifteen, because fifteen was measured
+                    // against the bar it sits on and came out the tallest icon
+                    // there: its neighbours paint 9 to 12px, this painted 15.
+                    pitch: Math.max(3, Math.round(Style.space(12) / PixelGlyphs.BAR_SIZE))
+                    // Half the pitch rather than the three quarters the dock
+                    // uses. Three cells is a coarse grid, so neighbouring lit
+                    // cells are adjacent far more often than in a seven-cell
+                    // glyph, and at three quarters the 1px gutter between two
+                    // 3px dots closes under antialiasing -- on the bar the
+                    // chevron came out as a blob rather than as a mark. A 2px
+                    // dot on a 2px gutter is the same matrix, still legible.
+                    fill: 0.5
                     tint: root.barForeground
                 }
             }
@@ -398,6 +442,7 @@ Panel {
                     }
 
                     RangeRow {
+                        scroller: flick
                         label: "Glyph size"
                         value: root.appearanceValue("iconSize", 28)
                         minimum: 14
@@ -408,6 +453,7 @@ Panel {
                     }
 
                     RangeRow {
+                        scroller: flick
                         label: "Row height"
                         value: root.appearanceValue("itemSize", 40)
                         minimum: root.appearanceValue("iconSize", 28) + 8
@@ -418,6 +464,7 @@ Panel {
                     }
 
                     RangeRow {
+                        scroller: flick
                         label: "Edge margin"
                         value: root.appearanceValue("edgeMargin", 8)
                         minimum: 0
@@ -428,6 +475,7 @@ Panel {
                     }
 
                     RangeRow {
+                        scroller: flick
                         label: "Background opacity"
                         value: root.appearanceValue("backgroundOpacity", 1.0)
                         minimum: 0.35
@@ -453,6 +501,7 @@ Panel {
                     }
 
                     RangeRow {
+                        scroller: flick
                         label: "Dither cell"
                         value: root.appearanceValue("ditherCell", 2)
                         minimum: 1

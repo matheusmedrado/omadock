@@ -428,23 +428,38 @@ function columnCells(count) {
 }
 
 
-// Artwork for the bar widget, which draws its icon at roughly a third of a dock
-// glyph. The dot size is a fraction of the pitch, so a 7x7 matrix at that size
-// rounds to a dot as wide as its own cell: the gutter disappears, the dots meet,
-// and the glyph reads as a solid shape rather than as a matrix -- which is the
-// one thing every mark in this plugin is supposed to read as. Five cells leave
-// room for a gutter at the size the bar actually renders.
-var BAR_SIZE = 5
+// Artwork for the bar widget. The dot size is a fraction of the pitch, so a
+// matrix drawn too small rounds to a dot as wide as its own cell: the gutter
+// disappears, the dots meet, and the glyph reads as a solid shape rather than as
+// a matrix -- which is the one thing every mark in this plugin is supposed to
+// read as. That sets the floor on the pitch, and the pitch times the cell count
+// is what the bar actually paints.
+//
+// Three cells at pitch 4 paint 11px inside the bar's 16px optical canvas, which
+// is the range its other icons occupy -- measured on a running bar, the
+// neighbouring glyphs paint 9 to 12px tall. Five cells at pitch 3 painted 15px,
+// which made this the tallest thing on the bar by a third.
+//
+// Three cells is a coarse grid, so the caller drops the dot to half the pitch
+// rather than the three quarters the dock uses: adjacent lit cells are the norm
+// here rather than the exception, and at three quarters the gutter between two
+// dots closes and the chevron draws as a blob.
+var BAR_SIZE = 3
 
 var BAR_GLYPHS = {
     // The chevron that opens the dock's own strip, so the bar carries the same
     // mark as the prompt it toggles.
+    //
+    // Every cell of the grid is used, in both directions. The five-cell chevron
+    // this replaces lit only columns 0 to 2, and since the matrix is centred as
+    // a box rather than as its artwork, the mark hung 3px left of the icon slot
+    // it sits in -- against a 27px slot pitch, far enough to see once the icons
+    // beside it are evenly spaced. test_theBarGlyphIsCentredInItsGrid keeps it
+    // honest.
     prompt: [
-        "10000",
-        "01000",
-        "00100",
-        "01000",
-        "10000"
+        "110",
+        "011",
+        "110"
     ]
 }
 

@@ -81,6 +81,42 @@ TestCase {
         compare(PixelGlyphs.has("no-such-glyph"), false)
     }
 
+    // The bar centres the matrix as a box rather than as its artwork, so a glyph
+    // whose lit cells sit to one side hangs off-centre in its icon slot. The
+    // five-cell chevron this replaced lit only columns 0 to 2 and drew 3px left
+    // of where it belonged, against a 27px slot pitch.
+    function test_theBarGlyphIsCentredInItsGrid() {
+        for (var key in PixelGlyphs.BAR_GLYPHS) {
+            var rows = PixelGlyphs.BAR_GLYPHS[key]
+            compare(rows.length, PixelGlyphs.BAR_SIZE, key + " has the wrong row count")
+
+            var minRow = -1
+            var maxRow = -1
+            var minColumn = PixelGlyphs.BAR_SIZE
+            var maxColumn = -1
+            for (var row = 0; row < rows.length; row += 1) {
+                var line = String(rows[row])
+                compare(line.length, PixelGlyphs.BAR_SIZE,
+                        key + " row " + row + " is the wrong width")
+                verify(/^[01]+$/.test(line),
+                       key + " row " + row + " has a cell that is not 0 or 1")
+                for (var column = 0; column < line.length; column += 1) {
+                    if (line.charAt(column) !== "1") continue
+                    if (minRow < 0) minRow = row
+                    maxRow = row
+                    if (column < minColumn) minColumn = column
+                    if (column > maxColumn) maxColumn = column
+                }
+            }
+
+            verify(maxRow >= 0, key + " has no lit cells")
+            compare(minColumn, PixelGlyphs.BAR_SIZE - 1 - maxColumn,
+                    key + " is not centred horizontally")
+            compare(minRow, PixelGlyphs.BAR_SIZE - 1 - maxRow,
+                    key + " is not centred vertically")
+        }
+    }
+
     function test_ruleCellsAreASingleRow() {
         var cells = PixelGlyphs.ruleCells(4)
         compare(cells.length, 4)
