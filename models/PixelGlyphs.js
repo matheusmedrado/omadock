@@ -151,6 +151,135 @@ var GLYPHS = {
         "1000001",
         "1111111"
     ],
+    // A globe with its graticule, for a site running as its own window. This is
+    // deliberately not the browser ring: the browser is the program you launch,
+    // a web application is one address pinned beside native ones, and a strip
+    // that draws them identically has answered the wrong question.
+    webapp: [
+        "0011100",
+        "0111110",
+        "1010101",
+        "1111111",
+        "1010101",
+        "0111110",
+        "0011100"
+    ],
+    // A display over a keypad.
+    calculator: [
+        "1111111",
+        "1000001",
+        "1111111",
+        "1010101",
+        "1000001",
+        "1010101",
+        "1111111"
+    ],
+    // Ascending bars. A system monitor used to resolve to the settings gear,
+    // which read as "a preferences panel" for what is actually a live graph.
+    monitor: [
+        "0000001",
+        "0000101",
+        "0000101",
+        "0010101",
+        "0010101",
+        "1010101",
+        "1010101"
+    ],
+    // Stacked platters, the long-standing shape for storage.
+    disk: [
+        "0111110",
+        "1000001",
+        "0111110",
+        "1000001",
+        "0111110",
+        "1000001",
+        "0111110"
+    ],
+    // A header band over ruled cells, so a spreadsheet is not the notepad its
+    // `Office;` category used to earn it.
+    spreadsheet: [
+        "1111111",
+        "1111111",
+        "1001001",
+        "1111111",
+        "1001001",
+        "1111111",
+        "1001001"
+    ],
+    // A chart on a screen, over a stand.
+    presentation: [
+        "1111111",
+        "1000001",
+        "1000101",
+        "1001101",
+        "1011101",
+        "1111111",
+        "0011100"
+    ],
+    // A pin: a pierced head tapering to a point. The taper is what keeps it
+    // apart from the browser and webapp rings at this size.
+    map: [
+        "0011100",
+        "0111110",
+        "1100011",
+        "1100011",
+        "0111110",
+        "0011100",
+        "0001000"
+    ],
+    // A camera body and its lens. A video call is not the speech bubble that
+    // chat draws, and not the play triangle that video draws.
+    call: [
+        "0000000",
+        "1111100",
+        "1000110",
+        "1000111",
+        "1000110",
+        "1111100",
+        "0000000"
+    ],
+    // Head and shoulders.
+    contacts: [
+        "0011100",
+        "0100010",
+        "0100010",
+        "0011100",
+        "0000000",
+        "0111110",
+        "1111111"
+    ],
+    // A chest with a lid and a strap.
+    archive: [
+        "1111111",
+        "1000001",
+        "1111111",
+        "1001001",
+        "1001001",
+        "1000001",
+        "1111111"
+    ],
+    // An arrow onto a floor.
+    download: [
+        "0001000",
+        "0001000",
+        "1111111",
+        "0111110",
+        "0011100",
+        "0001000",
+        "1111111"
+    ],
+    // Body between a blank sheet going in and a printed one coming out. The
+    // sheets are drawn differently on purpose: mirrored outlines read as a
+    // symmetrical box rather than as a direction of travel.
+    printer: [
+        "0111110",
+        "0100010",
+        "1111111",
+        "1000101",
+        "1111111",
+        "0111110",
+        "0111110"
+    ],
     // The dock itself: a strip with three lit slots. Used by the bar widget.
     dock: [
         "0000000",

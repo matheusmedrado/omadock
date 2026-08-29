@@ -105,7 +105,7 @@ function fallbackGlyph(label, fallback) {
 // change from a rebuild that landed on the same answer.
 var COMPARED_ITEM_FIELDS = [
     "key", "desktopId", "appId", "name", "shortLabel", "icon", "iconSource",
-    "categories", "pinned", "missing", "running", "active", "urgent",
+    "categories", "exec", "pinned", "missing", "running", "active", "urgent",
     "windowCount", "slot"
 ]
 

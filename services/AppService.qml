@@ -130,6 +130,10 @@ Item {
             // Freedesktop Categories, so a glyph can be chosen for an
             // application whose name says nothing about what it is.
             categories: entry ? String(entry.categories || "") : "",
+            // The Exec line, which for a web application is the only place its
+            // identity appears: the entry declares no categories and its name is
+            // the site's brand rather than anything a keyword scan can use.
+            exec: entry ? String(entry.execString || "") : "",
             pinned: pinned,
             missing: !entry,
             running: windows.length > 0,

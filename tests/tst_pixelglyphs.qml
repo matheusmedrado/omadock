@@ -29,6 +29,32 @@ TestCase {
             var key = GlyphModel.KEYWORDS[index].glyph
             verify(PixelGlyphs.has(key), "no artwork for keyword key " + key)
         }
+        for (var categoryIndex = 0;
+                categoryIndex < GlyphModel.CATEGORY_GLYPHS.length;
+                categoryIndex += 1) {
+            var categoryKey = GlyphModel.CATEGORY_GLYPHS[categoryIndex].glyph
+            verify(PixelGlyphs.has(categoryKey),
+                   "no artwork for category key " + categoryKey)
+        }
+        for (var hostIndex = 0; hostIndex < GlyphModel.WEB_HOSTS.length; hostIndex += 1) {
+            var hostKey = GlyphModel.WEB_HOSTS[hostIndex].glyph
+            verify(PixelGlyphs.has(hostKey), "no artwork for web host key " + hostKey)
+        }
+        verify(PixelGlyphs.has(GlyphModel.WEBAPP_GLYPH))
+    }
+
+    // A table entry with no terms matches nothing and is dead weight that reads
+    // as coverage. One was left behind while the web host table was being
+    // written, naming a glyph that had no artwork either.
+    function test_noResolutionTableEntryIsEmpty() {
+        var tables = [GlyphModel.KEYWORDS, GlyphModel.CATEGORY_GLYPHS, GlyphModel.WEB_HOSTS]
+        for (var tableIndex = 0; tableIndex < tables.length; tableIndex += 1) {
+            var table = tables[tableIndex]
+            for (var index = 0; index < table.length; index += 1) {
+                verify(table[index].terms.length > 0,
+                       "entry for " + table[index].glyph + " has no terms")
+            }
+        }
     }
 
     function test_cellsListOnlyLitPositions() {

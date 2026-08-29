@@ -6,12 +6,50 @@ All notable changes to OmaDock are documented here.
 
 ### Added
 
+- Web applications resolve to a glyph describing what they are. Omarchy writes
+  a web application entry with no `Categories=` and a name that is the site's
+  brand, so nothing the dock read said anything about it and every one of them
+  landed on the generic window glyph. The address is now read out of `Exec=`:
+  `youtube.com` is a video, `maps.google.com` is a map, `zoom.us` is a call. An
+  exact host is matched before any suffix, so `music.youtube.com` stays music
+  rather than inheriting the video glyph from the domain it sits under.
+- Both forms Omarchy writes are recognised: `omarchy-launch-webapp <address>`,
+  and the `omarchy-webapp-handler-<service>` form used by a web application that
+  also registers a scheme handler, which carries no address at all and names the
+  service in the script instead. `--app=` covers a web application made by hand
+  with a Chromium-derived browser.
+- A web application the host table does not name draws as a globe rather than as
+  the generic window glyph. It is still known to be a web application, which is
+  more than "unidentified window" says.
+- Twelve glyphs, for the application types the strip previously had no way to
+  draw: web application, calculator, system monitor, disk, spreadsheet,
+  presentation, map, call, contacts, archive, download, and printer.
 - Pressing a dock entry now dips its brightness for as long as the button is
   held. Press previously shared the focused rung of the brightness ladder, so
   clicking the application you were already on produced no feedback at all.
 
 ### Changed
 
+- Categories no longer end in a catch-all. `System;`, `Utility;`, and `Network;`
+  used to resolve to the settings gear and the browser ring, which meant a disk
+  utility, a Java console, and a torrent client all drew as preferences panels.
+  A confident wrong glyph is worse than the window glyph: the window glyph is
+  read as "unrecognised" and acted on accordingly, while a gear is read as an
+  answer. Anything the table does not describe now falls through to the window
+  glyph on purpose.
+- A system monitor, a calculator, a disk utility, and a printer queue draw as
+  themselves instead of as the settings gear they used to share.
+- The office suite's document types are no longer all the notepad. `libreoffice`
+  sat in the keyword table's notes entry and the keyword scan runs before
+  categories, so the spreadsheet, the presentation, and the drawing were all
+  answered for by the suite name before `Office;Spreadsheet;` was ever read.
+  `FlowChart` is what separates the suite's drawing program from its document
+  viewer, since both also declare `Graphics` and `VectorGraphics`.
+- `AudioVideo`, the primary freedesktop media category and the only one a
+  minimal media entry declares, was missing from the category table. An entry
+  carrying nothing else fell through to the window glyph.
+- `Settings;DesktopSettings;` is the compositor's own configuration rather than
+  an application preferences panel, and is read as the shell glyph.
 - The bar widget's icon is the prompt caret from the dock's own strip, drawn on
   a five-cell matrix. A dot is three quarters of its pitch, and the bar renders
   its icon at roughly a third of a dock glyph -- on the seven-cell matrix that
