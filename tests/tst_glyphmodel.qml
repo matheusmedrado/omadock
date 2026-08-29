@@ -188,6 +188,49 @@ TestCase {
         compare(GlyphModel.glyphFor("", "", "", "GNOME;Network;"), GlyphModel.DEFAULT_GLYPH)
     }
 
+    // Several applications of one kind in the strip draw as identical marks, so
+    // the ones whose brand survives a seven-dot grid draw as themselves instead.
+    function test_vendorMonogramsOutrankTheCategoryGlyph() {
+        var code = GlyphModel.glyphFor("", "", "", "Development;IDE;TextEditor;")
+        compare(GlyphModel.glyphFor("dev.zed.Zed", "", "Zed", ""), "zed")
+        compare(GlyphModel.glyphFor("", "dev.zed.Zed", "", ""), "zed")
+        compare(GlyphModel.glyphFor("nvim", "", "Neovim", ""), "neovim")
+        compare(GlyphModel.glyphFor("code", "", "Visual Studio Code", ""), "vscode")
+        compare(GlyphModel.glyphFor("cursor", "", "Cursor", ""), "cursor")
+        // Each is distinct from the generic glyph its family shares.
+        verify(code !== "zed" && code !== "neovim" && code !== "vscode")
+    }
+
+    // An exact id, never a substring: the monogram must not be claimed by an
+    // unrelated application whose id merely contains the vendor's name. "zed" is
+    // also a keyword for the generic editor glyph, so an id that only contains
+    // it lands there instead -- which is the distinction being asserted.
+    function test_aMonogramIsNotMatchedBySubstring() {
+        compare(GlyphModel.glyphFor("zed-adjacent", "", "Zed Adjacent", ""), "code")
+        compare(GlyphModel.glyphFor("", "", "vscodium", "Development;IDE;"), "code")
+    }
+
+    // Discord ships as a web application on Omarchy, so the vendor monogram has
+    // to outrank the host lookup as well as the category one.
+    function test_aVendorMonogramOutranksTheWebHost() {
+        compare(GlyphModel.glyphFor("Discord", "", "Discord", "",
+                                    webExec("discord.com")), "discord")
+        // A web application with no monogram still resolves from its host.
+        compare(GlyphModel.glyphFor("Slack", "", "Slack", "", webExec("slack.com")), "slack")
+        compare(GlyphModel.glyphFor("WhatsApp", "", "WhatsApp", "",
+                                    webExec("web.whatsapp.com")), "chat")
+    }
+
+    // Applications whose brand does not survive seven dots keep the semantic
+    // glyph on purpose -- a blurred logo is a worse mark, and the Chrome attempt
+    // was indistinguishable from the browser ring beside it.
+    function test_pictorialBrandsKeepTheirSemanticGlyph() {
+        compare(GlyphModel.glyphFor("firefox", "", "Firefox", ""), "browser")
+        compare(GlyphModel.glyphFor("chromium", "", "Chromium", ""), "browser")
+        compare(GlyphModel.glyphFor("dbeaver-ce", "", "DBeaver Community",
+                                    "Development;IDE;Database;"), "disk")
+    }
+
     // Nothing above may cost the resolutions that already worked.
     function test_theExistingResolutionsAreUnchanged() {
         compare(GlyphModel.glyphFor("com.mitchellh.ghostty", "", "Ghostty", "", ""), "terminal")

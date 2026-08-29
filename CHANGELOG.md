@@ -24,6 +24,19 @@ All notable changes to OmaDock are documented here.
 - Twelve glyphs, for the application types the strip previously had no way to
   draw: web application, calculator, system monitor, disk, spreadsheet,
   presentation, map, call, contacts, archive, download, and printer.
+- Vendor monograms for Zed, Visual Studio Code, Neovim, Cursor, Slack, and
+  Discord, so they draw as themselves rather than as the category they share.
+  The semantic glyphs answer "what kind of thing is this", which is the right
+  question right up until several of one kind sit in the strip together: eight
+  installed applications resolve to the code glyph and four to chat, and a row
+  of identical marks is a row you have to read the labels off.
+- Only a brand that reduces to a letterform or a simple geometric primitive is
+  eligible, because that is all that survives a seven-dot grid. Drawn at the
+  pitch the dock renders, a Z, a hash and a V stay themselves, while Firefox's
+  fox-on-globe and DBeaver's beaver both come out as featureless lumps and an
+  attempt at Chrome's wheel is indistinguishable from the browser ring beside
+  it. Those applications keep the semantic glyph they already resolve to, which
+  is a better mark than a blurred logo.
 - Pressing a dock entry now dips its brightness for as long as the button is
   held. Press previously shared the focused rung of the brightness ladder, so
   clicking the application you were already on produced no feedback at all.

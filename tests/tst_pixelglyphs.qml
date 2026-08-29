@@ -25,6 +25,10 @@ TestCase {
             verify(PixelGlyphs.has(GlyphModel.EXACT[id]),
                    "no artwork for exact key " + GlyphModel.EXACT[id])
         }
+        for (var vendorId in GlyphModel.VENDOR) {
+            verify(PixelGlyphs.has(GlyphModel.VENDOR[vendorId]),
+                   "no artwork for vendor key " + GlyphModel.VENDOR[vendorId])
+        }
         for (var index = 0; index < GlyphModel.KEYWORDS.length; index += 1) {
             var key = GlyphModel.KEYWORDS[index].glyph
             verify(PixelGlyphs.has(key), "no artwork for keyword key " + key)

@@ -280,6 +280,77 @@ var GLYPHS = {
         "0111110",
         "0111110"
     ],
+    // Vendor monograms. These are the marks for applications whose brand
+    // reduces to a letterform or a simple geometric primitive, which is the only
+    // kind of brand that survives a seven-dot grid.
+    //
+    // The rule is not negotiable artistically, it is a resolution limit, and it
+    // was measured rather than assumed: drawn at the pitch the dock actually
+    // renders, a Z, a hash and a V stay themselves, while a pictorial logo
+    // collapses. Firefox's fox-on-globe and DBeaver's beaver both became
+    // featureless lumps, and an attempt at Chrome's wheel came out as a ring
+    // indistinguishable from the browser glyph beside it -- which would make the
+    // strip less legible, not more. Those applications are better served by the
+    // semantic glyph they already resolve to, so they deliberately have no
+    // entry here. Anyone adding one should draw it at pitch 4 and look at it
+    // before deciding it reads.
+    zed: [
+        "1111111",
+        "0000110",
+        "0001100",
+        "0011000",
+        "0110000",
+        "1100000",
+        "1111111"
+    ],
+    // The folded ribbon, which reads as a bar with a chevron tucked into it.
+    vscode: [
+        "0000110",
+        "0010110",
+        "0110110",
+        "1100110",
+        "0110110",
+        "0010110",
+        "0000110"
+    ],
+    neovim: [
+        "1000001",
+        "1000001",
+        "0100010",
+        "0100010",
+        "0010100",
+        "0010100",
+        "0001000"
+    ],
+    // A text I-beam, for the editor named after one.
+    cursor: [
+        "1111111",
+        "0011100",
+        "0011100",
+        "0011100",
+        "0011100",
+        "0011100",
+        "1111111"
+    ],
+    // The pinwheel, which at this size is a hash.
+    slack: [
+        "0010100",
+        "0010100",
+        "1111111",
+        "0010100",
+        "1111111",
+        "0010100",
+        "0010100"
+    ],
+    discord: [
+        "0011100",
+        "0111110",
+        "1111111",
+        "1101011",
+        "1111111",
+        "0110110",
+        "0000000"
+    ],
     // The dock itself: a strip with three lit slots. Used by the bar widget.
     dock: [
         "0000000",
