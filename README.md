@@ -197,14 +197,27 @@ Update a plugin installation with:
 
 ```bash
 omarchy plugin update io.github.matheusmedrado.omadock
+omarchy-restart-shell
 ```
+
+**The restart is part of the update, not an optional extra.** The shell loads a
+plugin's QML when it starts, so new files on disk are not new code in the
+running shell. `omarchy plugin update` ends by calling
+`omarchy-shell shell rescanPlugins`, which finds plugins that have been added or
+removed but does not rebuild one that is already loaded -- so without the
+restart the update looks like it did nothing. It did: the files changed, the
+pixels did not.
 
 For a manual Git installation, update the checkout instead:
 
 ```bash
 git -C ~/.config/omarchy/plugins/io.github.matheusmedrado.omadock pull
-omarchy-shell shell rescanPlugins
+omarchy-restart-shell
 ```
+
+Only `~/.config/omadock/config.json` is applied without a restart. It is watched
+and re-read on save, which is why a preference set from the bar widget takes
+effect immediately while a new version of the dock does not.
 
 Remove the plugin with:
 
@@ -254,6 +267,27 @@ hyprctl monitors -j
 
 If the dock is hidden, check the active workspace, fullscreen state, and
 configured monitor mode before blaming the pixels.
+
+### The update ran but nothing changed
+
+Run `omarchy-restart-shell`. See [Updating and removing](#updating-and-removing):
+the shell keeps running the QML it started with, so an update is not visible
+until it restarts.
+
+To confirm the update itself landed, compare the checkout against the remote:
+
+```bash
+P=~/.config/omarchy/plugins/io.github.matheusmedrado.omadock
+git -C "$P" rev-parse HEAD
+git -C "$P" ls-remote origin HEAD
+```
+
+Matching hashes mean the update worked and only the restart is missing. Note
+that `git status` in that checkout may report `main` as ahead of `origin/main`
+even when it is identical: `omarchy plugin update` fetches with
+`git fetch origin HEAD`, which records `FETCH_HEAD` without moving the
+`origin/main` tracking ref that `git status` compares against. A plain
+`git -C "$P" fetch origin` refreshes it.
 
 ## Security and privacy
 
