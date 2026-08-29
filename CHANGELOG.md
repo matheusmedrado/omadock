@@ -4,6 +4,27 @@ All notable changes to OmaDock are documented here.
 
 ## [Unreleased]
 
+### Fixed
+
+- Scrolling the preferences panel no longer changes whatever slider the pointer
+  crosses on the way past. The shared `PanelSlider` takes every wheel event to
+  change its own value and never lets one reach the panel underneath, and there
+  are five sliders in a panel that scrolls, so crossing one was the normal case
+  rather than the unlucky one -- and the value was committed before you could
+  see it move. The wheel now scrolls the panel over a slider as it does
+  everywhere else. Dragging is still how a value is changed, and a trackpad's
+  pixel deltas are used where it sends them, so it no longer moves the panel in
+  notch-sized jumps.
+- The bar icon is no longer the biggest thing on the bar. It painted 15px tall
+  where its neighbours paint 9 to 12, and it also hung 3px left of its icon
+  slot: the matrix is centred as a box rather than as its artwork, and the
+  five-cell chevron lit only the first three columns. It is now a three-cell
+  chevron that fills its grid in both directions, painting 11px on a 4px pitch.
+  Its dot is half the pitch rather than the dock's three quarters, because three
+  cells put lit cells side by side far more often than a seven-cell glyph does,
+  and at three quarters the gutter between two dots closes and the chevron draws
+  as a blob.
+
 ### Added
 
 - Web applications resolve to a glyph describing what they are. Omarchy writes
