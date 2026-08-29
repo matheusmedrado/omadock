@@ -37,8 +37,9 @@ widget changes any of it live.
 - Launch, focus, multi-window cycling, and safe context-menu actions.
 - Drag reorder for pinned apps, including pinning eligible running apps.
 - A bar widget with a preferences panel for hiding, layout, and pointer actions.
-- Dot-matrix glyphs resolved from the application, its name, or its desktop
-  entry categories.
+- Dot-matrix glyphs resolved from the application, its name, its desktop entry
+  categories, or -- for a web application, which declares none of those -- the
+  address it opens.
 - Live Omarchy theme integration.
 - A JSON configuration file that survives updates and removal.
 - No daemon, polling loop, telemetry, network requests, or extra runtime.
