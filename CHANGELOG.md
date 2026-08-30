@@ -6,6 +6,18 @@ All notable changes to OmaDock are documented here.
 
 ### Fixed
 
+- Glyphs draw as a dot matrix at every glyph size. A dot is three quarters of
+  the pitch, and below a glyph size of 21 the pitch is 2, where three quarters
+  rounds up to the whole cell: the gutter closed and every mark in the strip
+  drew as a filled shape. That is a third of the range the preferences slider
+  offers, and it cost the dock the one thing every mark in it is supposed to
+  read as. A pixel of gutter is now reserved before the fraction is honoured,
+  which changes no size that already had one.
+- A single-pixel dot is drawn as a pixel rather than as an antialiased circle,
+  and dots sit on whole pixels. Rounding and antialiasing spread a 1px dot over
+  its neighbours, and an odd gutter put it on a half pixel, so the smallest
+  glyphs came out as grey haze even once they had a gutter.
+
 - Scrolling the preferences panel no longer changes whatever slider the pointer
   crosses on the way past. The shared `PanelSlider` takes every wheel event to
   change its own value and never lets one reach the panel underneath, and there
