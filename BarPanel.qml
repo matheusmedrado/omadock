@@ -364,18 +364,38 @@ Panel {
                             anchors.verticalCenter: parent.verticalCenter
                             spacing: Style.space(7)
 
+                            // The prompt caret, which is what the bar button and
+                            // the dock's own strip both draw. This was the
+                            // `dock` glyph, the bar icon from before the caret
+                            // replaced it, so the panel introduced the plugin
+                            // with a mark that appears nowhere else in it.
+                            //
+                            // Pitch 3, not 2. A dot is three quarters of the
+                            // pitch, so at 2 it rounds up to the full cell: the
+                            // gutter closes and the mark draws as a filled box
+                            // rather than as a matrix, which is the one thing
+                            // every mark here is supposed to read as. That is
+                            // the same fault the bar icon was carrying, left
+                            // behind in the masthead when the bar icon was
+                            // fixed. 21px inside a 30px band, against 14px of
+                            // solid before.
                             DotMatrix {
                                 anchors.verticalCenter: parent.verticalCenter
-                                cells: PixelGlyphs.cellsFor("dock")
+                                cells: PixelGlyphs.cellsFor("prompt")
                                 columns: PixelGlyphs.SIZE
                                 rows: PixelGlyphs.SIZE
-                                pitch: 2
+                                pitch: 3
                                 tint: root.foreground
                             }
 
+                            // The product name, which is spelled with both
+                            // capitals. The dock's own entry labels are
+                            // lowercase because they read as shell commands;
+                            // this is a wordmark, not a command, and it matches
+                            // the manifest and the README.
                             Text {
                                 anchors.verticalCenter: parent.verticalCenter
-                                text: "omadock"
+                                text: "OmaDock"
                                 color: root.foreground
                                 font.family: Style.font.family
                                 font.pixelSize: Style.font.body
