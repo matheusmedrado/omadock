@@ -39,6 +39,11 @@ All notable changes to OmaDock are documented here.
 
 ### Added
 
+- Strata draws the folder glyph Nautilus and the other file managers draw. Its
+  id and name say nothing a keyword scan recognises, so a running Strata window
+  fell through to the generic window glyph whenever its desktop entry -- which
+  does declare `FileManager` -- was not the thing being resolved.
+
 - Web applications resolve to a glyph describing what they are. Omarchy writes
   a web application entry with no `Categories=` and a name that is the site's
   brand, so nothing the dock read said anything about it and every one of them
