@@ -19,6 +19,7 @@ var WEBAPP_GLYPH = "webapp"
 var EXACT = {
     "com.mitchellh.ghostty": "terminal",
     "org.gnome.nautilus": "folder",
+    "io.github.lgse.strata": "folder",
     "org.gnome.settings": "settings",
     "app.zen_browser.zen": "browser",
     "zen": "browser",
@@ -105,7 +106,7 @@ var KEYWORDS = [
     { glyph: "browser", terms: ["firefox", "zen", "librewolf", "floorp", "waterfox",
         "chromium", "chrome", "brave", "vivaldi", "edge", "opera"] },
     { glyph: "folder", terms: ["nautilus", "thunar", "dolphin", "nemo", "caja", "pcmanfm",
-        "files", "ranger", "yazi", "filemanager"] },
+        "strata", "files", "ranger", "yazi", "filemanager"] },
     { glyph: "code", terms: ["code", "vscodium", "zed", "neovim", "nvim", "helix",
         "emacs", "sublime", "jetbrains", "intellij", "pycharm", "goland", "webstorm",
         "cursor", "editor"] },

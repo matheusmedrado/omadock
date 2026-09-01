@@ -235,6 +235,8 @@ TestCase {
     function test_theExistingResolutionsAreUnchanged() {
         compare(GlyphModel.glyphFor("com.mitchellh.ghostty", "", "Ghostty", "", ""), "terminal")
         compare(GlyphModel.glyphFor("org.gnome.Nautilus", "", "Files", "", ""), "folder")
+        compare(GlyphModel.glyphFor("io.github.lgse.Strata", "", "Strata", "", ""), "folder")
+        compare(GlyphModel.glyphFor("", "io.github.lgse.Strata", "Strata", "", ""), "folder")
         compare(GlyphModel.glyphFor("", "firefox", "Firefox", "", ""), "browser")
         compare(GlyphModel.glyphFor("", "", "", "System;TerminalEmulator;", ""), "terminal")
         compare(GlyphModel.glyphFor("com.example.Nope", "nope", "Nope", "", ""),
