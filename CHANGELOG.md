@@ -39,6 +39,25 @@ All notable changes to OmaDock are documented here.
 
 ### Added
 
+- The dock can be switched off without removing the plugin. The first row of the
+  preferences panel is the dock itself: switched off, its surfaces go away and it
+  stops tracking windows -- the one part of running this plugin the compositor
+  pays for -- while the plugin stays installed, the bar widget stays on the bar,
+  and every other setting keeps its value for when it comes back. Until now the
+  only way to stop the dock appearing was to disable or remove the plugin, which
+  also takes away the panel that would put it back.
+- The setting is `enabled` in `config.json`, and answers on the same IPC target
+  the dock already uses: `omarchy-shell omadock disable`, `enable`, and
+  `toggleEnabled`. `reveal` and `toggle` answer `disabled` while the dock is off
+  rather than latching a dock that is not there, since the latch would outlive
+  the state machine and bring the dock back already open.
+- The bar icon dims while the dock is off, because otherwise the bar says the
+  same thing whether the dock is merely hidden -- the normal state under Smart
+  Hide -- or gone for good. Middle-clicking it then switches the dock back on
+  instead of changing the hide mode: with no dock on screen, hide mode decides
+  how something that is not there behaves, and the only thing worth reaching for
+  without opening anything is having it back.
+
 - Strata draws the folder glyph Nautilus and the other file managers draw. Its
   id and name say nothing a keyword scan recognises, so a running Strata window
   fell through to the generic window glyph whenever its desktop entry -- which
