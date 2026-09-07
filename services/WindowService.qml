@@ -7,6 +7,12 @@ Item {
     id: root
 
     property var records: []
+    // Tracking windows is the only part of this plugin the compositor pays for:
+    // Hyprland answers IPC on its own event loop, and every window event costs a
+    // refreshToplevels() here. A dock the user has switched off must not spend
+    // that, so the event connections are cut rather than their handlers made to
+    // return early.
+    property bool active: true
     property int refreshDelayMs: 35
     property int ipcSettleMs: 25
     property int settleRetries: 0
@@ -222,6 +228,7 @@ Item {
     }
 
     function scheduleRefresh() {
+        if (!root.active) return
         root.settleRetries = 0
         refreshTimer.restart()
     }
@@ -282,19 +289,44 @@ Item {
 
     Connections {
         target: ToplevelManager
+        enabled: root.active
         function onActiveToplevelChanged() { root.scheduleRefresh() }
     }
 
     Connections {
         target: ToplevelManager.toplevels
+        enabled: root.active
         function onObjectInsertedPost() { root.scheduleRefresh() }
         function onObjectRemovedPost() { root.scheduleRefresh() }
     }
 
     Connections {
         target: Hyprland
+        enabled: root.active
         function onActiveToplevelChanged() { root.scheduleRefresh() }
         function onRawEvent(event) { root.handleEvent(event) }
+    }
+
+    onActiveChanged: {
+        if (!root.active) {
+            // A refresh already in flight would repopulate the records the
+            // moment they are dropped, so stop the pair of timers that carry it
+            // before dropping them. The records hold live toplevel handles, and
+            // a dock that is switched off should not be the reason any of them
+            // are kept alive.
+            refreshTimer.stop()
+            settleTimer.stop()
+            root.records = []
+            return
+        }
+
+        // Focus is tracked by address so a repeat can be skipped, and events
+        // were ignored while the dock was away: the address on record may name a
+        // window that is no longer focused, or no longer there at all. Forget
+        // it, or focusing that window again reads as a repeat and the dock draws
+        // the wrong entry as active.
+        root.activeAddress = ""
+        root.scheduleRefresh()
     }
 
     Component.onCompleted: root.scheduleRefresh()

@@ -37,6 +37,7 @@ widget changes any of it live.
 - Launch, focus, multi-window cycling, and safe context-menu actions.
 - Drag reorder for pinned apps, including pinning eligible running apps.
 - A bar widget with a preferences panel for hiding, layout, and pointer actions.
+- A switch that turns the dock off without removing the plugin.
 - Dot-matrix glyphs resolved from the application, its name, its desktop entry
   categories, or -- for a web application, which declares none of those -- the
   address it opens.
@@ -119,6 +120,12 @@ to open a preferences panel covering hiding, layout, glyphs, and pointer actions
 Middle-clicking the icon toggles between Smart Hide and never hiding, which is
 the setting worth reaching for without opening anything.
 
+The first row of the panel is the dock itself. Switching it off leaves the
+plugin installed and the widget on the bar: the dock's surfaces go away, it
+stops tracking windows, and every other setting keeps its value for when it
+comes back. The bar icon dims while the dock is off, and middle-clicking it then
+switches the dock back on rather than changing the hide mode.
+
 Add it to the bar from the Omarchy plugin UI, or from a terminal:
 
 ```bash
@@ -140,7 +147,15 @@ omarchy-shell omadock reveal
 omarchy-shell omadock conceal
 omarchy-shell omadock toggleOn DP-1     # a named monitor
 omarchy-shell omadock status            # state, per monitor, as JSON
+
+omarchy-shell omadock disable           # switch the dock off; the plugin stays
+omarchy-shell omadock enable
+omarchy-shell omadock toggleEnabled
 ```
+
+`disable`, `enable`, and `toggleEnabled` write the same setting the first row of
+the preferences panel does. While the dock is off, `reveal` and `toggle` answer
+`disabled` and change nothing, rather than latching a dock that is not there.
 
 A reveal is a latch rather than a hover: it holds the dock open over whatever
 Smart Hide would otherwise do, until something conceals it. Bind it in
@@ -167,6 +182,7 @@ A minimal configuration looks like this:
 ```json
 {
   "version": 1,
+  "enabled": true,
   "position": "bottom",
   "monitorMode": "all",
   "pinned": [
@@ -175,9 +191,12 @@ A minimal configuration looks like this:
 }
 ```
 
-The configuration also supports monitor selection, compact or comfortable
-density, appearance, hide behavior, and click actions. Changes are applied
-live when valid; invalid edits keep the last known-good configuration.
+`enabled` is the dock itself: set it to `false` and the plugin stays installed
+and the bar widget stays on the bar, with nothing on screen and no window
+tracking, until it is set back. The configuration also supports monitor
+selection, compact or comfortable density, appearance, hide behavior, and click
+actions. Changes are applied live when valid; invalid edits keep the last
+known-good configuration.
 
 Settings the panel does not surface, because they are set once and forgotten:
 `monitorMode` and `monitors`, `aliases` for applications whose window class does

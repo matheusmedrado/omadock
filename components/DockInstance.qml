@@ -9,10 +9,18 @@ Item {
     property var configService
     property var appService
     property bool forcedReveal: false
+    // Whether the user wants a dock at all, as opposed to whether this monitor
+    // is one it belongs on. The two are separate settings and read separately
+    // in the status dump, but they meet here: the state machine already has a
+    // way to be on screen for no monitor, and switching the dock off is the
+    // same thing on every monitor at once. Suspending rather than tearing the
+    // instance down is what makes coming back cheap and keeps the exclusive
+    // zone released while it is away.
+    property bool dockEnabled: true
     readonly property string monitorName: monitor ? String(monitor.name || "") : ""
     readonly property var configuration: configService ? configService.settings : ({})
     readonly property var monitor: screen ? Hyprland.monitorFor(screen) : null
-    readonly property bool monitorEnabled: isMonitorEnabled()
+    readonly property bool monitorEnabled: root.dockEnabled && isMonitorEnabled()
 
     function isMonitorEnabled() {
         var mode = configuration.monitorMode || "all"
@@ -46,6 +54,7 @@ Item {
         }
         return {
             monitor: root.monitorName,
+            dockEnabled: root.dockEnabled,
             enabled: root.monitorEnabled,
             state: hideController.stateName,
             revealProgress: hideController.revealProgress,

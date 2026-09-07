@@ -29,6 +29,12 @@ function clone(value) {
 function defaultConfig() {
     return {
         version: CONFIG_VERSION,
+        // Switching the dock off is not a hide mode: hide modes decide when the
+        // dock is on screen, and this decides whether there is one at all. It
+        // sits at the top level for the same reason `position` does, and it
+        // defaults on, so a configuration written before it existed keeps the
+        // dock it already had.
+        enabled: true,
         position: "bottom",
         monitorMode: "all",
         monitors: [],
@@ -245,6 +251,7 @@ function normalizeConfig(raw, defaults) {
     var warnings = []
     var value = fallback
     value.version = CONFIG_VERSION
+    value.enabled = boolValue(raw, "enabled", fallback.enabled, warnings, "config")
     value.position = enumValue(raw, "position", ["bottom"], fallback.position, warnings, "config")
     value.monitorMode = enumValue(raw, "monitorMode", ["all", "focused", "named"], fallback.monitorMode, warnings, "config")
     value.monitors = normalizeMonitors(raw, fallback.monitors, warnings)
@@ -290,7 +297,7 @@ function normalizeConfig(raw, defaults) {
 
 function mergeKnownSettings(original, normalized) {
     var result = isObject(original) ? clone(original) : {}
-    var knownKeys = ["version", "position", "monitorMode", "monitors", "appearance", "behavior", "pinned", "aliases"]
+    var knownKeys = ["version", "enabled", "position", "monitorMode", "monitors", "appearance", "behavior", "pinned", "aliases"]
     for (var index = 0; index < knownKeys.length; index += 1) {
         var key = knownKeys[index]
         result[key] = clone(normalized[key])

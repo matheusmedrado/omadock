@@ -75,6 +75,7 @@ done < <(find . -path './.git' -prune -o -type f -perm /111 -print)
 
 jq -e '
     .version == 1
+    and .enabled == true
     and .position == "bottom"
     and (.monitorMode as $mode |
          (["all", "focused", "named"] | index($mode)) != null)

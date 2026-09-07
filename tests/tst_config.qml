@@ -17,6 +17,35 @@ TestCase {
         compare(result.value.behavior.hideMode, "smart")
     }
 
+    function test_theDockIsOnUnlessTheConfigurationSaysOtherwise() {
+        compare(ConfigModel.defaultConfig().enabled, true)
+        compare(ConfigModel.normalizeConfig({ version: 1 }).value.enabled, true)
+
+        var off = ConfigModel.normalizeConfig({ version: 1, enabled: false })
+        verify(off.valid)
+        compare(off.value.enabled, false)
+        compare(off.warnings.length, 0)
+    }
+
+    function test_aNonBooleanEnabledLeavesTheDockOn() {
+        var result = ConfigModel.normalizeConfig({ version: 1, enabled: "no" })
+        verify(result.valid)
+        compare(result.value.enabled, true)
+        compare(result.warnings.length, 1)
+        compare(result.warnings[0], "config.enabled was reset to its default")
+    }
+
+    // A key missing from mergeKnownSettings is dropped from the file the next
+    // time anything is written, so a dock switched off from the panel would
+    // switch itself back on at the next save.
+    function test_enabledSurvivesAWriteBack() {
+        var off = { version: 1, enabled: false }
+        compare(ConfigModel.mergeKnownSettings(off, ConfigModel.normalizeConfig(off).value).enabled, false)
+
+        var bare = { version: 1 }
+        compare(ConfigModel.mergeKnownSettings(bare, ConfigModel.normalizeConfig(bare).value).enabled, true)
+    }
+
     function test_invalidVersionIsRejected() {
         var result = ConfigModel.normalizeConfig({ version: 2 })
         verify(!result.valid)

@@ -27,6 +27,9 @@ Panel {
         ? configuration.appearance : ({})
     readonly property var behavior: configuration && configuration.behavior
         ? configuration.behavior : ({})
+    // Anything but an explicit `false` is a dock, so a configuration written
+    // before the setting existed keeps the one it already had.
+    readonly property bool dockEnabled: !(configuration && configuration.enabled === false)
 
     readonly property color foreground: bar ? bar.foreground : Color.foreground
     readonly property color dim: Util.alpha(foreground, 0.55)
@@ -41,6 +44,7 @@ Panel {
 
     function setAppearance(key, value) { configService.setSectionValue("appearance", key, value) }
     function setBehavior(key, value) { configService.setSectionValue("behavior", key, value) }
+    function setEnabled(value) { configService.setValue("enabled", value) }
 
     function appearanceValue(key, fallback) {
         var value = root.appearance[key]
@@ -273,7 +277,7 @@ Panel {
         anchors.fill: parent
         bar: root.bar
         active: root.opened
-        tooltipText: "Dock preferences"
+        tooltipText: root.dockEnabled ? "Dock preferences" : "Dock preferences (dock off)"
         iconComponent: Component {
             Item {
                 DotMatrix {
@@ -298,14 +302,33 @@ Panel {
                     // chevron came out as a blob rather than as a mark. A 2px
                     // dot on a 2px gutter is the same matrix, still legible.
                     fill: 0.5
-                    tint: root.barForeground
+                    // Dimmed while the dock is switched off. Otherwise the bar
+                    // says the same thing whether the dock is merely hidden --
+                    // which is the normal state under Smart Hide -- or gone for
+                    // good, and the only way to tell them apart is to open the
+                    // panel and read it.
+                    tint: root.dockEnabled ? root.barForeground
+                        : Util.alpha(root.barForeground, 0.4)
                 }
             }
         }
+        // Middle click is for the one setting worth reaching for without opening
+        // anything, and which setting that is depends on whether there is a
+        // dock. With the dock switched off, hide mode decides how a dock that
+        // is not there behaves; the only thing worth reaching for is bringing it
+        // back. Switching it off stays a deliberate act in the panel, so this
+        // only ever puts it back.
         onPressed: function(buttonCode) {
-            if (buttonCode === Qt.MiddleButton) root.setBehavior("hideMode",
+            if (buttonCode !== Qt.MiddleButton) {
+                root.toggle()
+                return
+            }
+            if (!root.dockEnabled) {
+                root.setEnabled(true)
+                return
+            }
+            root.setBehavior("hideMode",
                 root.behaviorValue("hideMode", "smart") === "never" ? "smart" : "never")
-            else root.toggle()
         }
     }
 
@@ -403,198 +426,222 @@ Panel {
                         }
                     }
 
-                    Header { text: "BEHAVIOUR" }
-
-                    ChoiceRow {
-                        label: "Hide"
-                        value: root.behaviorValue("hideMode", "smart")
-                        options: [
-                            { label: "Smart", value: "smart" },
-                            { label: "Always hide", value: "always" },
-                            { label: "Never hide", value: "never" }
-                        ]
-                        description: {
-                            var mode = root.behaviorValue("hideMode", "smart")
-                            if (mode === "always") return "Stay hidden; reveal from the screen edge."
-                            if (mode === "never") return "Always on screen."
-                            return "Hide only when a window would sit under the dock."
-                        }
-                        onPicked: function(next) { root.setBehavior("hideMode", next) }
-                    }
-
+                    // The dock itself, above everything that describes one.
+                    // Switched off, the plugin stays installed and this panel
+                    // stays on the bar: the dock's surfaces go away and it stops
+                    // tracking windows, and every setting below keeps its value
+                    // for when it comes back. They are dimmed and inert while
+                    // there is nothing for them to apply to, which is how this
+                    // panel already treats a control whose subject is switched
+                    // off.
                     SwitchRow {
-                        label: "Reserve space"
-                        description: root.behaviorValue("hideMode", "smart") === "never"
-                            ? "Keep windows clear of the dock."
-                            : "Push windows up while the dock is on screen, and give the space back when it hides."
-                        checked: root.behaviorValue("reserveSpace", false)
-                        onToggled: function(value) { root.setBehavior("reserveSpace", value) }
+                        label: "Dock"
+                        description: root.dockEnabled
+                            ? "Switch off to put the dock away without removing the plugin."
+                            : "Off. This panel stays on the bar, and the settings below apply when the dock comes back."
+                        checked: root.dockEnabled
+                        onToggled: function(value) { root.setEnabled(value) }
                     }
 
-                    SwitchRow {
-                        label: "Show running applications"
-                        description: "List running applications that are not pinned."
-                        checked: root.behaviorValue("showRunningUnpinned", true)
-                        onToggled: function(value) { root.setBehavior("showRunningUnpinned", value) }
-                    }
-
-                    Header { text: "APPEARANCE" }
-
-                    ChoiceRow {
-                        label: "Density"
-                        value: root.appearanceValue("density", "compact")
-                        options: [
-                            { label: "Compact", value: "compact" },
-                            { label: "Comfortable", value: "comfortable" }
-                        ]
-                        onPicked: function(next) { root.setAppearance("density", next) }
-                    }
-
-                    ChoiceRow {
-                        label: "Labels"
-                        value: root.appearanceValue("showLabels", "always")
-                        options: [
-                            { label: "Always", value: "always" },
-                            { label: "On hover", value: "hover" },
-                            { label: "Never", value: "never" }
-                        ]
-                        onPicked: function(next) { root.setAppearance("showLabels", next) }
-                    }
-
-                    RangeRow {
-                        scroller: flick
-                        label: "Glyph size"
-                        value: root.appearanceValue("iconSize", 28)
-                        minimum: 14
-                        maximum: 42
-                        step: 1
-                        suffix: "px"
-                        onMoved: function(next) { root.setAppearance("iconSize", Math.round(next)) }
-                    }
-
-                    RangeRow {
-                        scroller: flick
-                        label: "Row height"
-                        value: root.appearanceValue("itemSize", 40)
-                        minimum: root.appearanceValue("iconSize", 28) + 8
-                        maximum: 72
-                        step: 1
-                        suffix: "px"
-                        onMoved: function(next) { root.setAppearance("itemSize", Math.round(next)) }
-                    }
-
-                    RangeRow {
-                        scroller: flick
-                        label: "Edge margin"
-                        value: root.appearanceValue("edgeMargin", 8)
-                        minimum: 0
-                        maximum: 32
-                        step: 1
-                        suffix: "px"
-                        onMoved: function(next) { root.setAppearance("edgeMargin", Math.round(next)) }
-                    }
-
-                    RangeRow {
-                        scroller: flick
-                        label: "Background opacity"
-                        value: root.appearanceValue("backgroundOpacity", 1.0)
-                        minimum: 0.35
-                        maximum: 1.0
-                        step: 0.01
-                        integer: false
-                        onMoved: function(next) { root.setAppearance("backgroundOpacity", next) }
-                    }
-
-                    Header { text: "MATRIX" }
-
-                    SwitchRow {
-                        label: "Dot-matrix glyphs"
-                        description: "Off uses each application's own icon instead."
-                        checked: root.appearanceValue("usePixelGlyphs", true)
-                        onToggled: function(value) { root.setAppearance("usePixelGlyphs", value) }
-                    }
-
-                    SwitchRow {
-                        label: "Dither texture"
-                        checked: root.appearanceValue("showDither", true)
-                        onToggled: function(value) { root.setAppearance("showDither", value) }
-                    }
-
-                    RangeRow {
-                        scroller: flick
-                        label: "Dither cell"
-                        value: root.appearanceValue("ditherCell", 2)
-                        minimum: 1
-                        maximum: 6
-                        step: 1
-                        suffix: "px"
-                        enabled: root.appearanceValue("showDither", true)
-                        opacity: enabled ? 1 : 0.4
-                        onMoved: function(next) { root.setAppearance("ditherCell", Math.round(next)) }
-                    }
-
-                    SwitchRow {
-                        label: "Prompt"
-                        checked: root.appearanceValue("showPrompt", true)
-                        onToggled: function(value) { root.setAppearance("showPrompt", value) }
-                    }
-
-                    SwitchRow {
-                        label: "Slot numbers"
-                        checked: root.appearanceValue("showSlotNumbers", false)
-                        onToggled: function(value) { root.setAppearance("showSlotNumbers", value) }
-                    }
-
-                    Header { text: "POINTER" }
-
-                    ChoiceRow {
-                        label: "Click"
-                        value: root.behaviorValue("clickAction", "focus-or-launch")
-                        options: [
-                            { label: "Focus or launch", value: "focus-or-launch" },
-                            { label: "Focus only", value: "focus-only" },
-                            { label: "Open new instance", value: "launch-new" },
-                            { label: "Cycle windows", value: "cycle-windows" },
-                            { label: "Nothing", value: "none" }
-                        ]
-                        onPicked: function(next) { root.setBehavior("clickAction", next) }
-                    }
-
-                    ChoiceRow {
-                        label: "Middle click"
-                        value: root.behaviorValue("middleClickAction", "launch-new")
-                        options: [
-                            { label: "Open new instance", value: "launch-new" },
-                            { label: "Focus or launch", value: "focus-or-launch" },
-                            { label: "Close active window", value: "close-active" },
-                            { label: "Nothing", value: "none" }
-                        ]
-                        onPicked: function(next) { root.setBehavior("middleClickAction", next) }
-                    }
-
-                    ChoiceRow {
-                        label: "Wheel"
-                        value: root.behaviorValue("wheelAction", "cycle-windows")
-                        options: [
-                            { label: "Cycle windows", value: "cycle-windows" },
-                            { label: "Nothing", value: "none" }
-                        ]
-                        onPicked: function(next) { root.setBehavior("wheelAction", next) }
-                    }
-
-                    Item {
+                    Column {
                         width: parent.width
-                        height: Style.space(18)
+                        spacing: Style.space(10)
+                        enabled: root.dockEnabled
+                        opacity: enabled ? 1 : 0.4
 
-                        Text {
-                            anchors.verticalCenter: parent.verticalCenter
+                        Header { text: "BEHAVIOUR" }
+
+                        ChoiceRow {
+                            label: "Hide"
+                            value: root.behaviorValue("hideMode", "smart")
+                            options: [
+                                { label: "Smart", value: "smart" },
+                                { label: "Always hide", value: "always" },
+                                { label: "Never hide", value: "never" }
+                            ]
+                            description: {
+                                var mode = root.behaviorValue("hideMode", "smart")
+                                if (mode === "always") return "Stay hidden; reveal from the screen edge."
+                                if (mode === "never") return "Always on screen."
+                                return "Hide only when a window would sit under the dock."
+                            }
+                            onPicked: function(next) { root.setBehavior("hideMode", next) }
+                        }
+
+                        SwitchRow {
+                            label: "Reserve space"
+                            description: root.behaviorValue("hideMode", "smart") === "never"
+                                ? "Keep windows clear of the dock."
+                                : "Push windows up while the dock is on screen, and give the space back when it hides."
+                            checked: root.behaviorValue("reserveSpace", false)
+                            onToggled: function(value) { root.setBehavior("reserveSpace", value) }
+                        }
+
+                        SwitchRow {
+                            label: "Show running applications"
+                            description: "List running applications that are not pinned."
+                            checked: root.behaviorValue("showRunningUnpinned", true)
+                            onToggled: function(value) { root.setBehavior("showRunningUnpinned", value) }
+                        }
+
+                        Header { text: "APPEARANCE" }
+
+                        ChoiceRow {
+                            label: "Density"
+                            value: root.appearanceValue("density", "compact")
+                            options: [
+                                { label: "Compact", value: "compact" },
+                                { label: "Comfortable", value: "comfortable" }
+                            ]
+                            onPicked: function(next) { root.setAppearance("density", next) }
+                        }
+
+                        ChoiceRow {
+                            label: "Labels"
+                            value: root.appearanceValue("showLabels", "always")
+                            options: [
+                                { label: "Always", value: "always" },
+                                { label: "On hover", value: "hover" },
+                                { label: "Never", value: "never" }
+                            ]
+                            onPicked: function(next) { root.setAppearance("showLabels", next) }
+                        }
+
+                        RangeRow {
+                            scroller: flick
+                            label: "Glyph size"
+                            value: root.appearanceValue("iconSize", 28)
+                            minimum: 14
+                            maximum: 42
+                            step: 1
+                            suffix: "px"
+                            onMoved: function(next) { root.setAppearance("iconSize", Math.round(next)) }
+                        }
+
+                        RangeRow {
+                            scroller: flick
+                            label: "Row height"
+                            value: root.appearanceValue("itemSize", 40)
+                            minimum: root.appearanceValue("iconSize", 28) + 8
+                            maximum: 72
+                            step: 1
+                            suffix: "px"
+                            onMoved: function(next) { root.setAppearance("itemSize", Math.round(next)) }
+                        }
+
+                        RangeRow {
+                            scroller: flick
+                            label: "Edge margin"
+                            value: root.appearanceValue("edgeMargin", 8)
+                            minimum: 0
+                            maximum: 32
+                            step: 1
+                            suffix: "px"
+                            onMoved: function(next) { root.setAppearance("edgeMargin", Math.round(next)) }
+                        }
+
+                        RangeRow {
+                            scroller: flick
+                            label: "Background opacity"
+                            value: root.appearanceValue("backgroundOpacity", 1.0)
+                            minimum: 0.35
+                            maximum: 1.0
+                            step: 0.01
+                            integer: false
+                            onMoved: function(next) { root.setAppearance("backgroundOpacity", next) }
+                        }
+
+                        Header { text: "MATRIX" }
+
+                        SwitchRow {
+                            label: "Dot-matrix glyphs"
+                            description: "Off uses each application's own icon instead."
+                            checked: root.appearanceValue("usePixelGlyphs", true)
+                            onToggled: function(value) { root.setAppearance("usePixelGlyphs", value) }
+                        }
+
+                        SwitchRow {
+                            label: "Dither texture"
+                            checked: root.appearanceValue("showDither", true)
+                            onToggled: function(value) { root.setAppearance("showDither", value) }
+                        }
+
+                        RangeRow {
+                            scroller: flick
+                            label: "Dither cell"
+                            value: root.appearanceValue("ditherCell", 2)
+                            minimum: 1
+                            maximum: 6
+                            step: 1
+                            suffix: "px"
+                            enabled: root.appearanceValue("showDither", true)
+                            opacity: enabled ? 1 : 0.4
+                            onMoved: function(next) { root.setAppearance("ditherCell", Math.round(next)) }
+                        }
+
+                        SwitchRow {
+                            label: "Prompt"
+                            checked: root.appearanceValue("showPrompt", true)
+                            onToggled: function(value) { root.setAppearance("showPrompt", value) }
+                        }
+
+                        SwitchRow {
+                            label: "Slot numbers"
+                            checked: root.appearanceValue("showSlotNumbers", false)
+                            onToggled: function(value) { root.setAppearance("showSlotNumbers", value) }
+                        }
+
+                        Header { text: "POINTER" }
+
+                        ChoiceRow {
+                            label: "Click"
+                            value: root.behaviorValue("clickAction", "focus-or-launch")
+                            options: [
+                                { label: "Focus or launch", value: "focus-or-launch" },
+                                { label: "Focus only", value: "focus-only" },
+                                { label: "Open new instance", value: "launch-new" },
+                                { label: "Cycle windows", value: "cycle-windows" },
+                                { label: "Nothing", value: "none" }
+                            ]
+                            onPicked: function(next) { root.setBehavior("clickAction", next) }
+                        }
+
+                        ChoiceRow {
+                            label: "Middle click"
+                            value: root.behaviorValue("middleClickAction", "launch-new")
+                            options: [
+                                { label: "Open new instance", value: "launch-new" },
+                                { label: "Focus or launch", value: "focus-or-launch" },
+                                { label: "Close active window", value: "close-active" },
+                                { label: "Nothing", value: "none" }
+                            ]
+                            onPicked: function(next) { root.setBehavior("middleClickAction", next) }
+                        }
+
+                        ChoiceRow {
+                            label: "Wheel"
+                            value: root.behaviorValue("wheelAction", "cycle-windows")
+                            options: [
+                                { label: "Cycle windows", value: "cycle-windows" },
+                                { label: "Nothing", value: "none" }
+                            ]
+                            onPicked: function(next) { root.setBehavior("wheelAction", next) }
+                        }
+
+                        Item {
                             width: parent.width
-                            text: "Pinned applications are managed from the dock itself. "
-                                + "Everything here lives in ~/.config/omadock/config.json."
-                            color: root.dim
-                            font.family: Style.font.family
-                            font.pixelSize: Style.font.caption
-                            wrapMode: Text.WordWrap
+                            height: Style.space(18)
+
+                            Text {
+                                anchors.verticalCenter: parent.verticalCenter
+                                width: parent.width
+                                text: "Pinned applications are managed from the dock itself. "
+                                    + "Everything here lives in ~/.config/omadock/config.json."
+                                color: root.dim
+                                font.family: Style.font.family
+                                font.pixelSize: Style.font.caption
+                                wrapMode: Text.WordWrap
+                            }
                         }
                     }
                 }
