@@ -21,6 +21,7 @@ TestCase {
             menuOpen: false,
             forcedReveal: false,
             monitorEnabled: true,
+            edgeEnabled: true,
             workspaceChanging: false,
             revealDelayElapsed: false,
             hideDelayElapsed: false,
@@ -58,6 +59,28 @@ TestCase {
         var pendingHide = transition(shown, { windowConflict: true })
         compare(pendingHide.name, "HIDE_PENDING")
         compare(transition(pendingHide, { windowConflict: true, edgeHovered: true }).name, "SHOWN")
+    }
+
+    function test_disabledEdgeHoverDoesNotLatchSmartHide() {
+        compare(transition(StateReducer.initialState(), {
+            windowConflict: true,
+            edgeHovered: true,
+            edgeEnabled: false
+        }).name, "HIDDEN")
+
+        var shown = { name: "SHOWN", generation: 4 }
+        var pending = transition(shown, {
+            windowConflict: true,
+            edgeHovered: true,
+            edgeEnabled: false
+        })
+        compare(pending.name, "HIDE_PENDING")
+        compare(transition(pending, {
+            windowConflict: true,
+            edgeHovered: true,
+            edgeEnabled: false,
+            hideDelayElapsed: true
+        }).name, "HIDING")
     }
 
     function test_revealAndHideAnimationsComplete() {
