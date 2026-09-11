@@ -119,6 +119,7 @@ Item {
             menuOpen: root.menuOpen,
             forcedReveal: root.forcedReveal,
             monitorEnabled: root.monitorEnabled,
+            edgeEnabled: root.edgeEnabled,
             workspaceChanging: root.workspaceChanging,
             revealDelayElapsed: false,
             hideDelayElapsed: false,
@@ -270,6 +271,7 @@ Item {
     onDockHoveredChanged: root.scheduleEvaluate()
     onEdgeHoveredChanged: root.scheduleEvaluate()
     onWorkspaceChangingChanged: root.scheduleEvaluate()
+    onEdgeEnabledChanged: if (!root.edgeEnabled) root.edgeHovered = false
     onMenuOpenChanged: root.scheduleEvaluate()
     onDragActiveChanged: root.scheduleEvaluate()
     onFullscreenChanged: root.scheduleEvaluate()
