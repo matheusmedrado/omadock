@@ -55,4 +55,8 @@ PanelWindow {
     Component.onDestruction: {
         if (root.hideController) root.hideController.edgeHovered = false
     }
+
+    onVisibleChanged: {
+        if (!root.visible && root.hideController) root.hideController.edgeHovered = false
+    }
 }

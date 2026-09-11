@@ -33,22 +33,48 @@ TestCase {
         verify(Geometry.dockRect({ x: 0, y: 0, width: 0, height: 1080 }, 300, 60, 8) === null)
     }
 
-    // Under reservation the answer must not depend on whether the dock is
-    // currently reserving. A tiled window shrunk clear of the dock still counts,
-    // because releasing the zone is exactly what would put it back.
-    function test_reserveModeCountsAnyTiledWindowWhereverItSits() {
+    function test_tiledWindowTouchingProtectedBandStillConflicts() {
         var workspace = { id: 1 }
         var dockRect = { x: 0, y: 1140, width: 1920, height: 60 }
         var shrunk = {
             appId: "term", workspaceId: 1, monitorName: "eDP-1", mapped: true,
-            floating: false, geometry: { x: 0, y: 0, width: 1920, height: 1080 }
+            floating: false, geometry: { x: 0, y: 0, width: 1920, height: 1140 }
         }
 
-        compare(Geometry.conflicts(shrunk, dockRect, workspace, "eDP-1", false), false)
-        compare(Geometry.conflicts(shrunk, dockRect, workspace, "eDP-1", true), true)
+        compare(Geometry.conflicts(shrunk, dockRect, workspace, "eDP-1"), true)
     }
 
-    function test_reserveModeExemptsFloatingWindows() {
+    function test_tiledWindowConflictIgnoresGeometry() {
+        // A tiled window's reported rectangle is not a reliable signal for
+        // whether it would sit under the dock: with "Reserve space" on, the
+        // compositor pushes it exactly clear of the band (a tautology); with
+        // it off, gaps and split layout can just as easily leave the
+        // geometry short of the band even though the window is still tiled
+        // on the active workspace. Either way, any tiled window there is a
+        // conflict, regardless of where its geometry says it sits.
+        var workspace = { id: 1 }
+        var dockRect = { x: 0, y: 1140, width: 1920, height: 60 }
+        var shortWindow = {
+            appId: "term", workspaceId: 1, monitorName: "eDP-1", mapped: true,
+            floating: false, geometry: { x: 0, y: 0, width: 1920, height: 1080 }
+        }
+        var overlapping = {
+            appId: "term", workspaceId: 1, monitorName: "eDP-1", mapped: true,
+            floating: false, geometry: { x: 0, y: 1130, width: 1920, height: 120 }
+        }
+        var elsewhereOnScreen = {
+            appId: "term", workspaceId: 1, monitorName: "eDP-1", mapped: true,
+            floating: false, geometry: { x: 0, y: 0, width: 400, height: 1140 }
+        }
+
+        compare(Geometry.conflicts(shortWindow, dockRect, workspace, "eDP-1"), true)
+        compare(Geometry.conflicts(overlapping, dockRect, workspace, "eDP-1"), true)
+        compare(Geometry.conflicts(elsewhereOnScreen, {
+            x: 760, y: 1140, width: 400, height: 60
+        }, workspace, "eDP-1"), true)
+    }
+
+    function test_floatingWindowsNeedActualOverlap() {
         var workspace = { id: 1 }
         var dockRect = { x: 0, y: 1140, width: 1920, height: 60 }
         var floating = {
@@ -56,12 +82,10 @@ TestCase {
             floating: true, geometry: { x: 40, y: 40, width: 400, height: 300 }
         }
 
-        // An exclusive zone resizes the tiling area, so it never moves a
-        // floating window and one cannot be displaced by the dock.
-        compare(Geometry.conflicts(floating, dockRect, workspace, "eDP-1", true), false)
+        compare(Geometry.conflicts(floating, dockRect, workspace, "eDP-1"), false)
     }
 
-    function test_reserveModeStillHonoursWorkspaceAndMonitor() {
+    function test_conflictsStillHonoursWorkspaceAndMonitor() {
         var workspace = { id: 1 }
         var dockRect = { x: 0, y: 1140, width: 1920, height: 60 }
         var elsewhere = {
@@ -73,8 +97,8 @@ TestCase {
             floating: false, geometry: { x: 0, y: 0, width: 1920, height: 1080 }
         }
 
-        compare(Geometry.conflicts(elsewhere, dockRect, workspace, "eDP-1", true), false)
-        compare(Geometry.conflicts(otherMonitor, dockRect, workspace, "eDP-1", true), false)
+        compare(Geometry.conflicts(elsewhere, dockRect, workspace, "eDP-1"), false)
+        compare(Geometry.conflicts(otherMonitor, dockRect, workspace, "eDP-1"), false)
     }
 
     function test_conflictFallbacks() {

@@ -54,28 +54,26 @@ function isOmaDockSurface(record) {
     return false
 }
 
-// `reserveMode` says the dock holds an exclusive zone while it is on screen.
+// A tiled window's reported geometry is not a reliable signal for whether it
+// wants the dock's screen band. When the dock reserves space, the compositor
+// pushes tiled windows exactly clear of that band, so testing for geometric
+// overlap is a tautology. When it doesn't reserve space, the compositor's own
+// gaps and split layout can just as easily leave a tiled window's geometry
+// short of the band even though hiding the dock would let that window flow
+// back underneath it. Either way, the real question -- would this window claim
+// the dock's space if the dock got out of the way? -- is answered by "is there
+// a tiled window on the active workspace at all", not by its exact rectangle.
 //
-// That changes the question this function has to answer. Normally it asks
-// whether a window is in the dock's band right now. Under reservation that is
-// unanswerable without contradiction: revealing the dock pushes the tiled
-// windows clear, which erases the conflict that justified hiding, so the dock
-// would reveal once and never hide again. Compensating the geometry by the
-// current zone only moves the problem, because the zone flips before the
-// compositor has reflowed and the stale reading bounces the dock back open.
-//
-// So under reservation it asks a question with no dependence on the dock's own
-// state: is there a tiled window here at all? In a tiling compositor the tiling
-// area always grows into whatever the dock gives back, so any tiled window
-// would occupy the band. Floating windows are exempt -- an exclusive zone does
-// not move them.
-function conflicts(record, protectedRect, workspace, monitorName, reserveMode) {
+// Floating windows are the exception: nothing about the dock's exclusive zone
+// moves them, so they are checked against the dock's protected rectangle for
+// real overlap.
+function conflicts(record, protectedRect, workspace, monitorName) {
     if (!record || !validRect(protectedRect) || isOmaDockSurface(record)) return false
     if (record.mapped === false || record.minimized || !sameWorkspace(record, workspace)) return false
     if (monitorName && record.monitorName && String(record.monitorName) !== String(monitorName)) return false
     if (record.fullscreen || record.maximized) return true
-    if (reserveMode) return !record.floating
-    if (!validRect(record.geometry)) return !record.floating
+    if (!record.floating) return true
+    if (!validRect(record.geometry)) return false
     return intersects(record.geometry, protectedRect)
 }
 
