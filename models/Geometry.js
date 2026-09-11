@@ -13,6 +13,11 @@ function validRect(rectangle) {
         && rectangle.width >= 0 && rectangle.height >= 0
 }
 
+function overlapsHorizontally(first, second) {
+    return first.x < second.x + second.width
+        && first.x + first.width > second.x
+}
+
 function dockRect(monitor, dockWidth, dockHeight, edgeMargin) {
     if (!monitor) return null
     var values = [monitor.x, monitor.y, monitor.width, monitor.height,
@@ -54,22 +59,23 @@ function isOmaDockSurface(record) {
     return false
 }
 
-// Under space reservation (`reserveMode`), revealing the dock pushes tiled
-// windows clear, so the geometry no longer intersects even though hiding the
-// dock would let them flow back underneath it. In that mode any tiled window on
-// the active workspace counts as a conflict.
+// Smart Hide answers one question regardless of layout mode: would this window
+// want the dock's screen band? A reserved dock pushes bottom tiles up so they
+// only touch the band's top edge instead of overlapping it; that still counts
+// as a conflict because hiding the dock gives that strip back immediately.
 //
-// Without reservation, Smart Hide answers the narrower question it is named
-// after: whether a window would actually sit under the dock as it is now.
-//
-// Floating windows are checked against the dock's protected rectangle.
-function conflicts(record, protectedRect, workspace, monitorName, reserveMode) {
+// Floating windows keep using literal overlap because the exclusive zone never
+// moves them.
+function conflicts(record, protectedRect, workspace, monitorName) {
     if (!record || !validRect(protectedRect) || isOmaDockSurface(record)) return false
     if (record.mapped === false || record.minimized || !sameWorkspace(record, workspace)) return false
     if (monitorName && record.monitorName && String(record.monitorName) !== String(monitorName)) return false
     if (record.fullscreen || record.maximized) return true
     if (!validRect(record.geometry)) return !record.floating
-    if (!record.floating) return reserveMode || intersects(record.geometry, protectedRect)
+    if (!record.floating) {
+        var bottom = record.geometry.y + record.geometry.height
+        return overlapsHorizontally(record.geometry, protectedRect) && bottom >= protectedRect.y
+    }
     return intersects(record.geometry, protectedRect)
 }
 
