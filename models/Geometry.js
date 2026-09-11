@@ -54,22 +54,18 @@ function isOmaDockSurface(record) {
     return false
 }
 
-// In a tiling compositor the tiling area always grows to fill the workspace,
-// so any tiled window occupies the workspace tiling area and counts as a reason
-// to hide the dock. Under reservation (`reserveMode`), revealing the dock pushes
-// tiled windows clear, which erases the geometrical intersection; without reservation,
-// tiling gaps and layouts may also leave the window geometry clear of the dock rect.
-// In both cases, asking whether a tiled window exists on the active workspace asks
-// a question independent of dock reservation state or tiling gaps.
-//
-// Floating windows are checked against the dock's protected rectangle.
+// Under Smart Hide, any tiled window on the active workspace occupies the workspace
+// tiling area and counts as a conflict, regardless of whether space reservation
+// (`reserveMode`) is enabled or disabled or whether tiling gaps exist.
+// Floating windows trigger a conflict if maximized, fullscreen, or intersecting
+// the dock's protected rectangle.
 function conflicts(record, protectedRect, workspace, monitorName, reserveMode) {
     if (!record || !validRect(protectedRect) || isOmaDockSurface(record)) return false
     if (record.mapped === false || record.minimized || !sameWorkspace(record, workspace)) return false
     if (monitorName && record.monitorName && String(record.monitorName) !== String(monitorName)) return false
     if (record.fullscreen || record.maximized) return true
     if (!record.floating) return true
-    if (!validRect(record.geometry)) return !record.floating
+    if (!validRect(record.geometry)) return false
     return intersects(record.geometry, protectedRect)
 }
 

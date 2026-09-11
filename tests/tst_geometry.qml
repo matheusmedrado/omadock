@@ -47,7 +47,7 @@ TestCase {
         compare(Geometry.conflicts(shrunk, dockRect, workspace, "eDP-1", true), true)
     }
 
-    function test_reserveModeExemptsFloatingWindows() {
+    function test_reserveModeExemptsNonIntersectingFloatingWindows() {
         var workspace = { id: 1 }
         var dockRect = { x: 0, y: 1140, width: 1920, height: 60 }
         var floating = {
