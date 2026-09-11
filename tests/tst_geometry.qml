@@ -44,10 +44,17 @@ TestCase {
         compare(Geometry.conflicts(shrunk, dockRect, workspace, "eDP-1"), true)
     }
 
-    function test_tiledWindowConflictUsesProtectedBandGeometry() {
+    function test_tiledWindowConflictIgnoresGeometry() {
+        // A tiled window's reported rectangle is not a reliable signal for
+        // whether it would sit under the dock: with "Reserve space" on, the
+        // compositor pushes it exactly clear of the band (a tautology); with
+        // it off, gaps and split layout can just as easily leave the
+        // geometry short of the band even though the window is still tiled
+        // on the active workspace. Either way, any tiled window there is a
+        // conflict, regardless of where its geometry says it sits.
         var workspace = { id: 1 }
         var dockRect = { x: 0, y: 1140, width: 1920, height: 60 }
-        var clear = {
+        var shortWindow = {
             appId: "term", workspaceId: 1, monitorName: "eDP-1", mapped: true,
             floating: false, geometry: { x: 0, y: 0, width: 1920, height: 1080 }
         }
@@ -55,16 +62,16 @@ TestCase {
             appId: "term", workspaceId: 1, monitorName: "eDP-1", mapped: true,
             floating: false, geometry: { x: 0, y: 1130, width: 1920, height: 120 }
         }
-        var touchingElsewhere = {
+        var elsewhereOnScreen = {
             appId: "term", workspaceId: 1, monitorName: "eDP-1", mapped: true,
             floating: false, geometry: { x: 0, y: 0, width: 400, height: 1140 }
         }
 
-        compare(Geometry.conflicts(clear, dockRect, workspace, "eDP-1"), false)
+        compare(Geometry.conflicts(shortWindow, dockRect, workspace, "eDP-1"), true)
         compare(Geometry.conflicts(overlapping, dockRect, workspace, "eDP-1"), true)
-        compare(Geometry.conflicts(touchingElsewhere, {
+        compare(Geometry.conflicts(elsewhereOnScreen, {
             x: 760, y: 1140, width: 400, height: 60
-        }, workspace, "eDP-1"), false)
+        }, workspace, "eDP-1"), true)
     }
 
     function test_floatingWindowsNeedActualOverlap() {
