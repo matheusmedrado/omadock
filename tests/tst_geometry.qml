@@ -33,9 +33,8 @@ TestCase {
         verify(Geometry.dockRect({ x: 0, y: 0, width: 0, height: 1080 }, 300, 60, 8) === null)
     }
 
-    // Under reservation the answer must not depend on whether the dock is
-    // currently reserving. A tiled window shrunk clear of the dock still counts,
-    // because releasing the zone is exactly what would put it back.
+    // A tiled window on the active workspace always counts as a conflict,
+    // regardless of whether space reservation is enabled or disabled.
     function test_reserveModeCountsAnyTiledWindowWhereverItSits() {
         var workspace = { id: 1 }
         var dockRect = { x: 0, y: 1140, width: 1920, height: 60 }
@@ -44,7 +43,7 @@ TestCase {
             floating: false, geometry: { x: 0, y: 0, width: 1920, height: 1080 }
         }
 
-        compare(Geometry.conflicts(shrunk, dockRect, workspace, "eDP-1", false), false)
+        compare(Geometry.conflicts(shrunk, dockRect, workspace, "eDP-1", false), true)
         compare(Geometry.conflicts(shrunk, dockRect, workspace, "eDP-1", true), true)
     }
 
