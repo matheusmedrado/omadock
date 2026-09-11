@@ -54,27 +54,21 @@ function isOmaDockSurface(record) {
     return false
 }
 
-// `reserveMode` says the dock holds an exclusive zone while it is on screen.
+// In a tiling compositor the tiling area always grows to fill the workspace,
+// so any tiled window occupies the workspace tiling area and counts as a reason
+// to hide the dock. Under reservation (`reserveMode`), revealing the dock pushes
+// tiled windows clear, which erases the geometrical intersection; without reservation,
+// tiling gaps and layouts may also leave the window geometry clear of the dock rect.
+// In both cases, asking whether a tiled window exists on the active workspace asks
+// a question independent of dock reservation state or tiling gaps.
 //
-// That changes the question this function has to answer. Normally it asks
-// whether a window is in the dock's band right now. Under reservation that is
-// unanswerable without contradiction: revealing the dock pushes the tiled
-// windows clear, which erases the conflict that justified hiding, so the dock
-// would reveal once and never hide again. Compensating the geometry by the
-// current zone only moves the problem, because the zone flips before the
-// compositor has reflowed and the stale reading bounces the dock back open.
-//
-// So under reservation it asks a question with no dependence on the dock's own
-// state: is there a tiled window here at all? In a tiling compositor the tiling
-// area always grows into whatever the dock gives back, so any tiled window
-// would occupy the band. Floating windows are exempt -- an exclusive zone does
-// not move them.
+// Floating windows are checked against the dock's protected rectangle.
 function conflicts(record, protectedRect, workspace, monitorName, reserveMode) {
     if (!record || !validRect(protectedRect) || isOmaDockSurface(record)) return false
     if (record.mapped === false || record.minimized || !sameWorkspace(record, workspace)) return false
     if (monitorName && record.monitorName && String(record.monitorName) !== String(monitorName)) return false
     if (record.fullscreen || record.maximized) return true
-    if (reserveMode) return !record.floating
+    if (!record.floating) return true
     if (!validRect(record.geometry)) return !record.floating
     return intersects(record.geometry, protectedRect)
 }
