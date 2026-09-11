@@ -84,7 +84,7 @@ Item {
         var records = root.windowRecords()
         for (var index = 0; index < records.length; index += 1) {
             if (Geometry.conflicts(records[index], dockRect, workspace,
-                    root.monitorName, root.reserveSpace)) return true
+                    root.monitorName)) return true
         }
         return false
     }
