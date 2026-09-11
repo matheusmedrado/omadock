@@ -13,11 +13,6 @@ function validRect(rectangle) {
         && rectangle.width >= 0 && rectangle.height >= 0
 }
 
-function overlapsHorizontally(first, second) {
-    return first.x < second.x + second.width
-        && first.x + first.width > second.x
-}
-
 function dockRect(monitor, dockWidth, dockHeight, edgeMargin) {
     if (!monitor) return null
     var values = [monitor.x, monitor.y, monitor.width, monitor.height,
@@ -59,23 +54,26 @@ function isOmaDockSurface(record) {
     return false
 }
 
-// Smart Hide answers one question regardless of layout mode: would this window
-// want the dock's screen band? A reserved dock pushes bottom tiles up so they
-// only touch the band's top edge instead of overlapping it; that still counts
-// as a conflict because hiding the dock gives that strip back immediately.
+// A tiled window's reported geometry is not a reliable signal for whether it
+// wants the dock's screen band. When the dock reserves space, the compositor
+// pushes tiled windows exactly clear of that band, so testing for geometric
+// overlap is a tautology. When it doesn't reserve space, the compositor's own
+// gaps and split layout can just as easily leave a tiled window's geometry
+// short of the band even though hiding the dock would let that window flow
+// back underneath it. Either way, the real question -- would this window claim
+// the dock's space if the dock got out of the way? -- is answered by "is there
+// a tiled window on the active workspace at all", not by its exact rectangle.
 //
-// Floating windows keep using literal overlap because the exclusive zone never
-// moves them.
+// Floating windows are the exception: nothing about the dock's exclusive zone
+// moves them, so they are checked against the dock's protected rectangle for
+// real overlap.
 function conflicts(record, protectedRect, workspace, monitorName) {
     if (!record || !validRect(protectedRect) || isOmaDockSurface(record)) return false
     if (record.mapped === false || record.minimized || !sameWorkspace(record, workspace)) return false
     if (monitorName && record.monitorName && String(record.monitorName) !== String(monitorName)) return false
     if (record.fullscreen || record.maximized) return true
-    if (!validRect(record.geometry)) return !record.floating
-    if (!record.floating) {
-        var bottom = record.geometry.y + record.geometry.height
-        return overlapsHorizontally(record.geometry, protectedRect) && bottom >= protectedRect.y
-    }
+    if (!record.floating) return true
+    if (!validRect(record.geometry)) return false
     return intersects(record.geometry, protectedRect)
 }
 
