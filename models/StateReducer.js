@@ -12,8 +12,12 @@ function initialState() {
 // a hold, a dock revealed from the edge hides again as soon as the hide delay
 // expires and then re-reveals, flickering under a stationary pointer.
 function heldOpen(input) {
-    return !!(input.dockHovered || input.edgeHovered || input.dragActive
+    return !!(input.dockHovered || edgeHolding(input) || input.dragActive
         || input.menuOpen || input.forcedReveal)
+}
+
+function edgeHolding(input) {
+    return !!input.edgeHovered && input.edgeEnabled !== false
 }
 
 function nextState(current, name) {
@@ -56,7 +60,7 @@ function reduce(current, input) {
                 || values.dragActive || values.menuOpen) {
             return nextState(state, "REVEALING")
         }
-        if (values.edgeHovered) {
+        if (edgeHolding(values)) {
             return values.revealDelayElapsed ? nextState(state, "REVEALING") : nextState(state, "REVEAL_PENDING")
         }
         if (shouldReveal({
@@ -76,7 +80,7 @@ function reduce(current, input) {
         if (values.forcedReveal || values.dockHovered || values.dragActive || values.menuOpen) {
             return nextState(state, "REVEALING")
         }
-        if (!values.edgeHovered) return nextState(state, "HIDDEN")
+        if (!edgeHolding(values)) return nextState(state, "HIDDEN")
         return values.revealDelayElapsed ? nextState(state, "REVEALING") : state
 
     case "REVEALING":
@@ -96,7 +100,7 @@ function reduce(current, input) {
         return values.hideDelayElapsed ? nextState(state, "HIDING") : state
 
     case "HIDING":
-        if (heldOpen(values) || values.edgeHovered
+        if (heldOpen(values)
                 || (hideMode === "smart" && !values.windowConflict && !values.workspaceChanging)) {
             return nextState(state, "REVEALING")
         }

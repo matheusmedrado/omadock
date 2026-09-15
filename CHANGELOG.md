@@ -6,6 +6,16 @@ All notable changes to OmaDock are documented here.
 
 ### Fixed
 
+- Smart Hide no longer stays shown forever when "Reserve space" is off. It
+  asked whether a tiled window's reported rectangle overlapped the dock's
+  band, but without an exclusive zone forcing the compositor to push windows
+  clear, gaps and split layouts can leave that geometry short of the band
+  even while a window is plainly tiled underneath the dock -- so the
+  conflict check never fired and the dock behaved like "Never hide." Any
+  tiled window on the active workspace now counts as a conflict on its own,
+  regardless of its exact geometry, which is already true in effect when
+  space is reserved. Floating windows still need real overlap, since nothing
+  about the exclusive zone moves them.
 - Glyphs draw as a dot matrix at every glyph size. A dot is three quarters of
   the pitch, and below a glyph size of 21 the pitch is 2, where three quarters
   rounds up to the whole cell: the gutter closed and every mark in the strip
